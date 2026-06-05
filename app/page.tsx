@@ -9,7 +9,7 @@ export default function Home() {
       <section className="hero landingHero">
         <div className="heroGrid landingGrid">
           <div className="heroCopy">
-            <p className="eyebrow">AI travel operator for high-value trips</p>
+            <p className="eyebrow">AI Operating System for Enterprise Travel</p>
             <h1>Trustworthy travel execution starts before booking.</h1>
             <p className="lede">
               {BRAND.productDisplayName} helps travelers move from messy intent to decision-ready,

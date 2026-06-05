@@ -37,7 +37,7 @@ export function SiteFooter() {
       <div>
         <strong>{BRAND.productDisplayName}</strong>
         <p>
-          AI travel operator for high-value trips. Demo launch MVP only. No automatic booking or
+          AI Operating System for Enterprise Travel. Demo launch MVP only. No automatic booking or
           payment capture.
         </p>
       </div>

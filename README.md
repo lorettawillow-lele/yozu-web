@@ -1,6 +1,6 @@
 # Yozu Web
 
-Yozu is an AI travel operator for high-value trips.
+Yozu is an AI Operating System for Enterprise Travel.
 
 This repository currently contains the public 4-page launch MVP for Yozu:
 

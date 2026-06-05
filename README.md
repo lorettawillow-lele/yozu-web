@@ -310,6 +310,6 @@ We welcome contributions from:
 
 To discuss collaboration:
 
-contact@yozu.me
+loretta@yozu.me
 
 GitHub Issues and Pull Requests are welcome.

@@ -1,123 +1,97 @@
+import Link from "next/link";
 import { BRAND } from "./lib/brand";
-
-const demoSteps = [
-  {
-    label: "Intent",
-    title: "Tell Yozu the trip outcome",
-    body: "A high-value traveler describes timing, budget, people, constraints, and what would make the trip successful."
-  },
-  {
-    label: "Decision",
-    title: "Get 2-3 decision-ready options",
-    body: "The interface compresses choices into clear tradeoffs instead of dumping another search-results page."
-  },
-  {
-    label: "Trust",
-    title: "See sources, timestamps, and rules",
-    body: "Every bookable item must show supplier identity, price or inventory timestamp, and cancellation-rule access."
-  },
-  {
-    label: "Approval",
-    title: "Nothing moves without confirmation",
-    body: "Yozu coordinates booking intent only after explicit user approval; demo states are mock/sandbox until production review."
-  },
-  {
-    label: "Preflight",
-    title: "Re-check before execution",
-    body: "Price, inventory, supplier, and policy changes interrupt the flow and require a fresh confirmation."
-  }
-];
-
-const trustChecks = [
-  "Source-backed itinerary items",
-  "Visible + logged disclosure",
-  "Approval-gated booking coordination",
-  "Preflight price and inventory check",
-  "No lowest-price or unified-refund promise"
-];
+import { coreFlow, launchModules, trustChecks } from "./lib/site";
+import { PageShell } from "./ui";
 
 export default function Home() {
   return (
-    <main>
-      <section className="hero">
-        <nav className="nav" aria-label="Main navigation">
-          <a className="brand" href="/" aria-label={`${BRAND.productDisplayName} home`}>
-            <span className="mark" aria-hidden="true">
-              Y
-            </span>
-            <span>{BRAND.productDisplayName}</span>
-          </a>
-          <div className="navLinks">
-            <a href="#demo">Demo flow</a>
-            <a href="#trust">Trust layer</a>
-            <a href="#waitlist">Private preview</a>
-          </div>
-        </nav>
-
-        <div className="heroGrid">
+    <PageShell>
+      <section className="hero landingHero">
+        <div className="heroGrid landingGrid">
           <div className="heroCopy">
             <p className="eyebrow">AI travel operator for high-value trips</p>
-            <h1>AI suggestions are easy. Trustworthy travel execution is hard.</h1>
+            <h1>Trustworthy travel execution starts before booking.</h1>
             <p className="lede">
               {BRAND.productDisplayName} helps travelers move from messy intent to decision-ready,
-              source-backed travel plans with approval before execution.
+              source-backed options with approval, disclosure, and preflight before checkout
+              coordination.
             </p>
             <div className="actions">
-              <a className="primaryButton" href="#waitlist">
-                Request private preview
-              </a>
-              <a className="secondaryButton" href="#demo">
-                View demo flow
-              </a>
+              <Link className="primaryButton" href="/intake">
+                Start a trip request
+              </Link>
+              <Link className="secondaryButton" href="/demo">
+                View the coordination flow
+              </Link>
             </div>
             <p className="boundary">
-              Application Demo v1.0: mock/sandbox flow, no live payment capture, no merchant-of-record
-              promise.
+              Launch MVP: public landing, trip intake, demoable coordination flow, and human
+              follow-up. No automatic booking, no lowest-price promise, no payment capture.
             </p>
           </div>
 
-          <div className="demoCard" aria-label="Yozu demo state preview">
+          <div className="demoCard" aria-label="Yozu launch MVP preview">
             <div className="cardHeader">
-              <span>Approval checkpoint</span>
-              <strong>Decision ready</strong>
+              <span>Launch MVP</span>
+              <strong>4-page public product</strong>
             </div>
-            <div className="tripRoute">
-              <span>SFO</span>
-              <span className="routeLine" aria-hidden="true" />
-              <span>Singapore</span>
-            </div>
-            <div className="option">
-              <div>
-                <strong>Balanced work + recovery itinerary</strong>
-                <p>Best for Demo Day arrival, jet-lag recovery, and investor follow-up windows.</p>
+            <div className="routeStack">
+              <div className="routeRow">
+                <span>/</span>
+                <strong>landing</strong>
               </div>
-              <span className="pill">Recommended</span>
+              <div className="routeRow">
+                <span>/intake</span>
+                <strong>trip request</strong>
+              </div>
+              <div className="routeRow">
+                <span>/demo</span>
+                <strong>coordination flow</strong>
+              </div>
+              <div className="routeRow">
+                <span>/contact</span>
+                <strong>human follow-up</strong>
+              </div>
             </div>
-            <dl className="facts">
+            <div className="facts compactFacts">
               <div>
-                <dt>Source</dt>
-                <dd>Supplier data placeholder</dd>
+                <dt>Domain</dt>
+                <dd>{BRAND.primaryDomain}</dd>
               </div>
               <div>
-                <dt>Freshness</dt>
-                <dd>Preflight required</dd>
+                <dt>Contact</dt>
+                <dd>{BRAND.supportEmail}</dd>
               </div>
               <div>
                 <dt>Status</dt>
-                <dd>Awaiting approval</dd>
+                <dd>Live MVP</dd>
               </div>
-            </dl>
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="demo" className="section">
+      <section className="section">
         <div className="sectionIntro">
-          <p className="eyebrow">Demo flow</p>
-          <h2>From travel intent to auditable coordination.</h2>
+          <p className="eyebrow">Scope</p>
+          <h2>Small enough to launch, specific enough to be useful.</h2>
+        </div>
+        <div className="launchGrid">
+          {launchModules.map((item) => (
+            <article className="infoCard" key={item}>
+              <h3>{item}</h3>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="sectionIntro">
+          <p className="eyebrow">Core flow</p>
+          <h2>Intent to approval without pretending the trip is already booked.</h2>
         </div>
         <div className="steps">
-          {demoSteps.map((step) => (
+          {coreFlow.map((step) => (
             <article className="step" key={step.label}>
               <span>{step.label}</span>
               <h3>{step.title}</h3>
@@ -127,10 +101,10 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="trust" className="section trustSection">
+      <section className="section trustSection">
         <div className="sectionIntro">
           <p className="eyebrow">Trust layer</p>
-          <h2>Built to avoid the travel-agent failure mode: confident but wrong.</h2>
+          <h2>Built to coordinate real-world next steps without over-claiming.</h2>
         </div>
         <ul className="trustList">
           {trustChecks.map((check) => (
@@ -138,22 +112,6 @@ export default function Home() {
           ))}
         </ul>
       </section>
-
-      <section id="waitlist" className="section waitlist">
-        <div>
-          <p className="eyebrow">Private preview</p>
-          <h2>For travelers who need decisions, not another tab.</h2>
-          <p>
-            Waitlist and email capture will be connected after domain, email, QA, and legal review. Until
-            then, this page is a deployable application demo surface.
-          </p>
-        </div>
-        <div className="previewBox">
-          <span>Public domain</span>
-          <strong>{BRAND.publicDomain}</strong>
-          <small>{BRAND.supportEmail}</small>
-        </div>
-      </section>
-    </main>
+    </PageShell>
   );
 }

@@ -4,7 +4,7 @@ This scaffold uses a temporary Yozu visual direction so Vercel deployment can pr
 
 ## Current Direction
 
-- Citrus/yuzu memory cue without making the product look like a food or juice app.
+- Citrus memory cue without making the product look like a food or juice app.
 - Warm paper background, citrus accent, dark operator-grade panels.
 - Messaging emphasizes travel decision and execution coordination, not OTA pricing or inventory control.
 

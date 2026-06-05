@@ -1,13 +1,14 @@
 :root {
-  --ink: #18221c;
-  --muted: #59675c;
-  --line: rgba(24, 34, 28, 0.12);
+  --ink: #172018;
+  --muted: #5b675d;
+  --line: rgba(23, 32, 24, 0.12);
   --paper: #fbf7ec;
+  --paper-strong: rgba(255, 253, 245, 0.82);
   --cream: #fffdf5;
   --citrus: #d7f74a;
-  --yuzu: #f5c84b;
+  --gold: #f4cb56;
   --leaf: #2f6d4f;
-  --deep: #10251b;
+  --deep: #0f2218;
   --shadow: 0 24px 80px rgba(16, 37, 27, 0.14);
 }
 
@@ -24,7 +25,7 @@ body {
   color: var(--ink);
   background:
     radial-gradient(circle at 18% 12%, rgba(215, 247, 74, 0.38), transparent 28%),
-    radial-gradient(circle at 84% 8%, rgba(245, 200, 75, 0.34), transparent 24%),
+    radial-gradient(circle at 84% 8%, rgba(244, 203, 86, 0.28), transparent 24%),
     linear-gradient(135deg, var(--paper), #f5efe1 52%, #eef4e4);
   font-family: ui-serif, Georgia, "Times New Roman", serif;
 }
@@ -34,9 +35,31 @@ a {
   text-decoration: none;
 }
 
-.hero {
+input,
+textarea,
+button {
+  font: inherit;
+}
+
+textarea {
+  resize: vertical;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+dl {
+  margin-top: 0;
+}
+
+.pageShell {
   min-height: 100vh;
-  padding: 28px;
+}
+
+.siteHeader {
+  padding: 28px 28px 0;
 }
 
 .nav {
@@ -58,7 +81,7 @@ a {
 
 .mark {
   align-items: center;
-  background: conic-gradient(from 30deg, var(--citrus), var(--yuzu), #f6f0ad, var(--citrus));
+  background: conic-gradient(from 30deg, var(--citrus), var(--gold), #f6f0ad, var(--citrus));
   border: 1px solid rgba(24, 34, 28, 0.16);
   border-radius: 16px 18px 15px 20px;
   box-shadow: 0 10px 30px rgba(47, 109, 79, 0.18);
@@ -77,13 +100,39 @@ a {
   gap: 24px;
 }
 
+.hero,
+.section {
+  margin: 0 auto;
+  max-width: 1180px;
+  padding: 32px 28px 86px;
+}
+
+.pageLead {
+  padding-bottom: 36px;
+}
+
+.heroGrid,
+.intakeSection,
+.contactSection,
+.trustSection,
+.demoBoard,
+.demoSection {
+  display: grid;
+  gap: 28px;
+}
+
 .heroGrid {
   align-items: center;
-  display: grid;
   gap: 54px;
   grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
-  margin: 88px auto 0;
-  max-width: 1180px;
+}
+
+.landingHero {
+  padding-top: 32px;
+}
+
+.landingGrid {
+  margin-top: 48px;
 }
 
 .eyebrow {
@@ -97,42 +146,41 @@ a {
 }
 
 h1,
-h2,
-h3,
-p {
-  margin-top: 0;
-}
-
-h1 {
-  font-size: clamp(3.3rem, 8vw, 7.4rem);
+.pageTitle {
+  font-size: clamp(3rem, 7vw, 6.8rem);
   letter-spacing: -0.08em;
-  line-height: 0.9;
+  line-height: 0.92;
   margin-bottom: 24px;
-  max-width: 880px;
 }
 
 h2 {
-  font-size: clamp(2.2rem, 4vw, 4.3rem);
+  font-size: clamp(2.2rem, 4vw, 4.1rem);
   letter-spacing: -0.065em;
-  line-height: 0.95;
+  line-height: 0.96;
   margin-bottom: 16px;
 }
 
 h3 {
-  font-size: 1.4rem;
+  font-size: 1.34rem;
   letter-spacing: -0.04em;
-  line-height: 1.05;
+  line-height: 1.08;
   margin-bottom: 12px;
 }
 
-.lede {
+.lede,
+.smallLede {
   color: var(--muted);
-  font-size: clamp(1.1rem, 2vw, 1.35rem);
-  line-height: 1.55;
-  max-width: 680px;
+  font-size: clamp(1.06rem, 2vw, 1.28rem);
+  line-height: 1.6;
+  max-width: 720px;
 }
 
-.actions {
+.smallLede {
+  font-size: 1rem;
+}
+
+.actions,
+.formActions {
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
@@ -141,10 +189,13 @@ h3 {
 
 .primaryButton,
 .secondaryButton {
+  border: none;
   border-radius: 999px;
+  cursor: pointer;
   display: inline-flex;
   font-family: ui-sans-serif, system-ui, sans-serif;
   font-weight: 800;
+  justify-content: center;
   padding: 15px 22px;
 }
 
@@ -154,24 +205,40 @@ h3 {
 }
 
 .secondaryButton {
+  background: transparent;
   border: 1px solid var(--line);
   color: var(--deep);
 }
 
-.boundary {
+.boundary,
+.helperText,
+.statusNote,
+.siteFooter p {
   color: var(--muted);
   font-family: ui-sans-serif, system-ui, sans-serif;
-  font-size: 0.86rem;
-  line-height: 1.5;
-  max-width: 560px;
+  font-size: 0.9rem;
+  line-height: 1.6;
 }
 
-.demoCard {
+.demoCard,
+.infoCard,
+.step,
+.optionCard,
+.calloutCard,
+.infoPanel,
+.intakeForm,
+.contactCard {
   backdrop-filter: blur(20px);
-  background: rgba(255, 253, 245, 0.78);
-  border: 1px solid rgba(24, 34, 28, 0.12);
-  border-radius: 34px;
+  background: var(--paper-strong);
+  border: 1px solid var(--line);
+  border-radius: 30px;
   box-shadow: var(--shadow);
+}
+
+.demoCard,
+.infoPanel,
+.contactCard,
+.calloutCard {
   padding: 26px;
 }
 
@@ -180,7 +247,7 @@ h3 {
   display: flex;
   font-family: ui-sans-serif, system-ui, sans-serif;
   justify-content: space-between;
-  margin-bottom: 34px;
+  margin-bottom: 26px;
 }
 
 .cardHeader span {
@@ -188,99 +255,98 @@ h3 {
   font-size: 0.86rem;
 }
 
-.tripRoute {
+.routeStack {
+  display: grid;
+  gap: 14px;
+}
+
+.routeRow {
   align-items: center;
+  background: rgba(255, 253, 245, 0.76);
+  border: 1px solid var(--line);
+  border-radius: 20px;
   display: grid;
-  font-size: clamp(2.3rem, 5vw, 4.7rem);
-  font-weight: 900;
-  gap: 18px;
-  grid-template-columns: auto 1fr auto;
-  letter-spacing: -0.08em;
-  margin-bottom: 34px;
+  gap: 14px;
+  grid-template-columns: 120px 1fr;
+  padding: 14px 16px;
 }
 
-.routeLine {
-  background: linear-gradient(90deg, var(--leaf), var(--yuzu));
-  border-radius: 999px;
-  height: 5px;
-}
-
-.option {
-  background: var(--deep);
-  border-radius: 24px;
-  color: var(--cream);
-  display: grid;
-  gap: 18px;
-  grid-template-columns: 1fr auto;
-  padding: 22px;
-}
-
-.option p {
-  color: rgba(255, 253, 245, 0.7);
+.routeRow span,
+.routeRow strong {
   font-family: ui-sans-serif, system-ui, sans-serif;
-  line-height: 1.55;
-  margin: 8px 0 0;
 }
 
-.pill {
-  align-self: start;
-  background: var(--citrus);
-  border-radius: 999px;
+.routeRow span {
+  color: var(--leaf);
+  font-weight: 800;
+}
+
+.routeRow strong {
   color: var(--deep);
-  font-family: ui-sans-serif, system-ui, sans-serif;
-  font-size: 0.78rem;
-  font-weight: 900;
-  padding: 8px 11px;
 }
 
-.facts {
+.facts,
+.compactFacts {
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(3, 1fr);
   margin: 18px 0 0;
 }
 
-.facts div {
+.facts div,
+.optionFacts div {
   border: 1px solid var(--line);
   border-radius: 18px;
   padding: 14px;
 }
 
-.facts dt {
+.facts dt,
+.optionFacts dt {
   color: var(--muted);
   font-family: ui-sans-serif, system-ui, sans-serif;
   font-size: 0.76rem;
   margin-bottom: 6px;
 }
 
-.facts dd {
+.facts dd,
+.optionFacts dd {
   font-size: 0.92rem;
   font-weight: 800;
   margin: 0;
 }
 
-.section {
-  margin: 0 auto;
-  max-width: 1180px;
-  padding: 86px 28px;
+.sectionIntro,
+.wideIntro {
+  max-width: 820px;
 }
 
-.sectionIntro {
-  max-width: 760px;
+.launchGrid,
+.optionGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 36px;
+}
+
+.infoCard,
+.optionCard {
+  min-height: 160px;
+  padding: 22px;
 }
 
 .steps {
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   margin-top: 38px;
 }
 
+.demoSteps {
+  margin-top: 0;
+}
+
 .step {
-  background: rgba(255, 253, 245, 0.68);
-  border: 1px solid var(--line);
-  border-radius: 28px;
-  min-height: 260px;
+  min-height: 250px;
   padding: 22px;
 }
 
@@ -295,19 +361,23 @@ h3 {
 }
 
 .step p,
-.waitlist p {
+.infoPanel p,
+.optionCard p,
+.calloutCard p,
+.contactCard p,
+li {
   color: var(--muted);
   font-family: ui-sans-serif, system-ui, sans-serif;
   line-height: 1.6;
 }
 
 .trustSection {
-  display: grid;
-  gap: 44px;
+  align-items: start;
   grid-template-columns: 1fr 1fr;
 }
 
-.trustList {
+.trustList,
+.bulletList {
   display: grid;
   gap: 14px;
   list-style: none;
@@ -315,44 +385,123 @@ h3 {
   padding: 0;
 }
 
-.trustList li {
-  background: rgba(255, 253, 245, 0.8);
+.trustList li,
+.bulletList li {
+  background: rgba(255, 253, 245, 0.78);
   border: 1px solid var(--line);
   border-radius: 20px;
-  font-family: ui-sans-serif, system-ui, sans-serif;
-  font-weight: 800;
   padding: 18px;
 }
 
-.waitlist {
-  align-items: center;
+.intakeSection,
+.contactSection {
+  align-items: start;
+  grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.15fr);
+}
+
+.intakeLayout {
+  width: 100%;
+}
+
+.intakeForm {
   display: grid;
-  gap: 34px;
-  grid-template-columns: 1fr 360px;
+  gap: 16px;
+  padding: 26px;
 }
 
-.previewBox {
-  background: var(--deep);
-  border-radius: 30px;
-  color: var(--cream);
-  padding: 28px;
-}
-
-.previewBox span,
-.previewBox small {
-  color: rgba(255, 253, 245, 0.66);
-  display: block;
+.intakeForm label {
+  color: var(--deep);
+  display: grid;
   font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  gap: 8px;
 }
 
-.previewBox strong {
-  display: block;
-  font-size: 2.2rem;
-  letter-spacing: -0.05em;
-  margin: 12px 0;
+.intakeForm input,
+.intakeForm textarea {
+  background: rgba(255, 253, 245, 0.92);
+  border: 1px solid rgba(23, 32, 24, 0.18);
+  border-radius: 18px;
+  color: var(--ink);
+  min-height: 54px;
+  padding: 14px 16px;
+}
+
+.intakeForm textarea {
+  min-height: 120px;
+}
+
+.statusNote {
+  background: rgba(215, 247, 74, 0.18);
+  border: 1px solid rgba(47, 109, 79, 0.2);
+  border-radius: 18px;
+  margin: 0;
+  padding: 14px 16px;
+}
+
+.optionFacts {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+  margin: 16px 0 0;
+}
+
+.calloutCard,
+.emphasisCard {
+  background: var(--deep);
+  color: var(--cream);
+}
+
+.calloutCard p,
+.emphasisCard p,
+.emphasisCard h2,
+.emphasisCard .eyebrow,
+.emphasisCard li,
+.siteFooter strong,
+.siteFooter a,
+.footerMeta span {
+  color: var(--cream);
+}
+
+.contactCard .helperText,
+.calloutCard p,
+.emphasisCard p,
+.footerMeta a,
+.footerMeta span {
+  color: rgba(255, 253, 245, 0.78);
+}
+
+.tightList li {
+  padding: 14px 16px;
+}
+
+.siteFooter {
+  align-items: center;
+  border-top: 1px solid rgba(23, 32, 24, 0.08);
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 1fr auto;
+  margin: 0 auto;
+  max-width: 1180px;
+  padding: 0 28px 40px;
+}
+
+.footerMeta {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
 }
 
 @media (max-width: 920px) {
+  .siteHeader,
+  .hero,
+  .section,
+  .siteFooter {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
   .nav {
     align-items: flex-start;
     gap: 20px;
@@ -363,24 +512,33 @@ h3 {
   }
 
   .heroGrid,
+  .landingGrid,
   .trustSection,
-  .waitlist {
+  .intakeSection,
+  .contactSection,
+  .siteFooter,
+  .launchGrid,
+  .optionGrid,
+  .steps,
+  .facts,
+  .compactFacts {
     grid-template-columns: 1fr;
   }
 
-  .steps {
+  .routeRow {
     grid-template-columns: 1fr;
   }
 
-  .facts {
-    grid-template-columns: 1fr;
+  h1,
+  .pageTitle {
+    font-size: clamp(2.8rem, 11vw, 4.5rem);
   }
 
-  .hero {
-    padding: 20px;
+  h2 {
+    font-size: clamp(1.9rem, 8vw, 3rem);
   }
 
-  .section {
-    padding: 58px 20px;
+  .footerMeta {
+    justify-items: start;
   }
 }

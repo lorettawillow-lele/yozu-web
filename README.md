@@ -1,190 +1,102 @@
-# Yozu AI
+# Yozu Web
 
-Yozu is the Linux for AI-native travel. 
+Yozu is an AI travel operator for high-value trips.
 
-Yozu provides Open Travel Operating System for the AI Era.
+This repository currently contains the public 4-page launch MVP for Yozu:
 
-Its open-source travel infrastructure platform that enables hotels, travel providers, enterprises, and developers to deploy AI-native travel agents without replacing their existing systems.
+- public landing
+- trip intake
+- demoable coordination flow
+- contact / human follow-up
 
-Built around autonomous agents, structured travel data, and open APIs, Yozu helps travel suppliers connect directly with customers while reducing operational costs and increasing fulfillment efficiency.
+It does **not** represent a full OTA, merchant-of-record product, open travel operating system, or completed booking/payment platform.
 
-## Vision
+## Current Product Scope
 
-Travel is one of the world’s largest industries, yet the travel industry still runs on fragmented systems, manual operations, and commission-heavy marketplaces for decades. Yozu exists to rebuild that infrastructure for the AI era.
+The live MVP is designed to help a traveler move from intent to a decision-ready next step:
 
-Yozu aims to become the operating system powering the next generation of travel services:
+`intent -> decision-ready options -> source/disclosure -> approval -> preflight`
 
-* Hotels operate through AI agents
-* Enterprises book business travel through AI agents
-* Travelers interact with AI instead of forms and call centers
-* Suppliers retain ownership of their customers and data
+Current routes:
 
-Our mission is to make travel as programmable as software.
+- `/` — public landing
+- `/intake` — trip intake and request handoff
+- `/demo` — demoable coordination flow using mock/sandbox data
+- `/contact` — human follow-up path
 
-## Purpose
+## Product Boundaries
 
-Yozu provides a standardized AI layer on top of existing travel operations.
+Yozu follows these current launch boundaries:
 
-Instead of replacing hotel PMS, CRM, ERP, or booking systems, Yozu connects to them through open interfaces.
+- approval-gated coordination only
+- source/disclosure shown before next-step coordination
+- preflight re-check before checkout coordination
+- mock/sandbox demo states for current product flow
+- no automatic booking
+- no payment capture
+- no merchant-of-record claim
+- no booked / paid / ticketed completion state on the public site
 
-### Hotels
+## Trip Intake
 
-* Room inventory management
-* Dynamic pricing
-* Order fulfillment
-* Guest service automation
-* AI concierge
+The current intake flow is designed to collect trip intent and route it to a human follow-up path.
 
-### Enterprise Travel
+Users can submit:
 
-* Business trip planning
-* Policy compliance
-* Approval workflows
-* Expense integration
+- destination and dates
+- budget range
+- travelers
+- trip stakes and constraints
+- contact details for follow-up
 
-### Developers
+Current intake/privacy boundary:
 
-* Open Agent SDK
-* Travel APIs
-* Multi-agent orchestration
-* Custom travel workflows
+- submitted details are used only to respond to that trip request
+- users should not submit passport, payment, or other sensitive identity data
 
-## Roadmap
+## Repository Purpose
 
-### Phase 1
+This repository is the public launch surface for the current Yozu MVP.
 
-* Website
-* Agent SDK
-* Hotel Agent MVP
+It is suitable for:
 
-### Phase 2
+- landing page iteration
+- trip intake UX
+- demo flow presentation
+- submission/demo-day/public MVP deployment
 
-* Enterprise Travel Agent
-* Open API Platform
-* Self-hosted Deployment
+It is **not** yet the repository for:
 
-### Phase 3
+- supplier integrations
+- real booking/payment execution
+- SDKs or open infrastructure platform components
+- enterprise or hotel production systems
 
-* Global Supplier Network
-* Marketplace Protocol
-* Multi-Agent Ecosystem
+Those future directions should be documented separately until they become part of the actual shipped product.
 
-### Phase 4
+## Tech Stack
 
-* Travel Operating System
-* Autonomous Travel Workflows
-* Global Travel Infrastructure
+Current stack:
 
-## Architecture
+- Next.js
+- React
+- TypeScript
+- Vercel
 
-```text
-┌─────────────────────┐
-│     Traveler AI     │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│      Yozu Core      │
-│ Agent Orchestrator  │
-└───────┬─────┬───────┘
-        │     │
-        ▼     ▼
-
- Hotel Agent  Enterprise Agent
-        │     │
-        ▼     ▼
-
- Existing PMS / ERP / CRM
-```
-
-## Core Components
-
-### Hotel Agent
-
-Manages:
-
-* Room availability
-* Pricing
-* Orders
-* Guest requests
-* Service fulfillment
-
-### Enterprise Agent
-
-Manages:
-
-* Business travel requests
-* Internal policies
-* Approvals
-* Budget controls
-
-### Traveler Agent
-
-Provides:
-
-* Natural language booking
-* Personalized recommendations
-* Itinerary generation
-* Travel assistance
-
-
-## Features
-
-### AI Native
-
-Designed for agents first, not retrofitted with AI later.
-
-### Open Source
-
-Deploy on your own infrastructure.
-
-### Supplier-Owned Data
-
-Hotels and enterprises keep customer relationships.
-
-### Multi-Agent Architecture
-
-Travelers, suppliers, and enterprises can each operate independent agents.
-
-### Global Ready
-
-Supports:
-
-* Hotels
-* Transportation
-* Corporate travel
-* Tourism services
-
-## Quick Start
+## Local Development
 
 ### Prerequisites
 
 - Node.js 20+
-- npm or pnpm
-- Git
+- npm
 
-### Clone Repository
-
-```bash
-git clone https://github.com/lorettawillow-lele/yozu-web.git
-cd yozu-web
-```
-
-### Install Dependencies
-
-Using npm:
+### Install
 
 ```bash
 npm install
 ```
 
-Using pnpm:
-
-```bash
-pnpm install
-```
-
-### Run Development Server
+### Run Dev Server
 
 ```bash
 npm run dev
@@ -203,113 +115,29 @@ npm run build
 npm run start
 ```
 
-### Prerequisites
-
-* Node.js 20+
-* npm or pnpm
-* Git
-
-### Clone Repository
-git clone https://github.com/lorettawillow-lele/yozu-web.git
-cd yozu-web
-
-or
-
-pnpm install
-
-### Run Development Server
-npm run dev
-
-Open:
-http://localhost:3000
-
-Production Build
-npm run build
-
-npm run start
-
-### Repository Structure
+## Current Repository Structure
 
 ```text
 yozu-web/
 ├── app/
-├── components/
-├── public/
-├── styles/
-├── lib/
+│   ├── contact/
+│   ├── demo/
+│   ├── intake/
+│   └── lib/
 ├── docs/
-└── README.md
+├── public/
+├── README.md
+├── next.config.mjs
+├── package.json
+└── tsconfig.json
 ```
 
-## Guardrails
+## Contact
 
-Yozu follows several design principles.
+Current public contact path:
 
-1. Human-in-the-Loop
+- `loretta@yozu.me`
 
-Critical travel decisions require human confirmation.
+## Notes
 
-Examples:
-
-* Large payments
-* Reservation changes
-* Refund approvals
-
-
-2. Data Privacy
-
-Users own their data.
-
-Yozu does not sell traveler data.
-
-
-3. Supplier Ownership
-
-Hotels and travel providers maintain direct customer relationships.
-
-No platform lock-in.
-
-
-4. Explainable Actions
-
-Agents must provide reasoning for:
-
-* Recommendations
-* Pricing decisions
-* Schedule changes
-
-
-5. Open Standards
-
-Whenever possible, Yozu uses:
-
-* Open APIs
-* Open protocols
-* Portable data formats
-
-
-## Security
-
-* OAuth 2.0
-* Role-Based Access Control (RBAC)
-* Audit Logs
-* Encryption at Rest
-* Encryption in Transit
-
-## Contributing
-
-We are building the future infrastructure for AI-native travel.
-
-We welcome contributions from:
-
-- AI engineers
-- Travel technology builders
-- Hotel operators
-- Enterprise travel experts
-- Open-source contributors
-
-To discuss collaboration:
-
-loretta@yozu.me
-
-GitHub Issues and Pull Requests are welcome.
+If the public repo remains public, the README should continue to describe only currently shipped scope and clearly separate future roadmap from implemented capability.

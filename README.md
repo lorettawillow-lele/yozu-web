@@ -136,7 +136,7 @@ yozu-web/
 
 Current public contact path:
 
-- `loretta@yozu.me`
+- `contact@yozu.me`
 
 ## Notes
 

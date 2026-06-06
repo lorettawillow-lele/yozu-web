@@ -20,8 +20,8 @@ export default function Home() {
               <Link className="primaryButton" href="/intake">
                 Start a trip request
               </Link>
-              <Link className="secondaryButton" href="/demo">
-                View the coordination flow
+              <Link className="secondaryButton" href="/contact">
+                Request a demo
               </Link>
             </div>
             <p className="boundary">

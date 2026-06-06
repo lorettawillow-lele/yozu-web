@@ -3,8 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { BRAND } from "../lib/brand";
-import { buildTripCaseFromIntake } from "../lib/ops";
-import { upsertStoredCase } from "../lib/ops-storage";
 
 type FormState = {
   destination: string;
@@ -61,6 +59,7 @@ export function IntakeForm() {
   const [form, setForm] = useState<FormState>(initialState);
   const [submitted, setSubmitted] = useState(false);
   const [createdCaseId, setCreatedCaseId] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
   const mailtoHref = useMemo(() => {
     const subject = encodeURIComponent(`Yozu trip request | ${form.destination || "new itinerary"}`);
@@ -68,11 +67,24 @@ export function IntakeForm() {
     return `mailto:${BRAND.supportEmail}?subject=${subject}&body=${body}`;
   }, [form]);
 
-  function handleCreateCase() {
-    const tripCase = buildTripCaseFromIntake(form);
-    upsertStoredCase(tripCase);
-    setCreatedCaseId(tripCase.id);
-    router.push(`/ops/cases/${tripCase.id}`);
+  async function handleCreateCase() {
+    setIsCreating(true);
+    const response = await fetch("/api/cases", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(form)
+    });
+    const payload = (await response.json()) as { case?: { id: string } };
+
+    if (payload.case?.id) {
+      setCreatedCaseId(payload.case.id);
+      router.push(`/ops/cases/${payload.case.id}`);
+      return;
+    }
+
+    setIsCreating(false);
   }
 
   return (
@@ -136,8 +148,8 @@ export function IntakeForm() {
         </label>
 
         <div className="formActions">
-          <button className="primaryButton" type="button" onClick={handleCreateCase}>
-            Create workflow case
+          <button className="primaryButton" type="button" onClick={handleCreateCase} disabled={isCreating}>
+            {isCreating ? "Creating case..." : "Create workflow case"}
           </button>
           <a className="secondaryButton" href={mailtoHref} onClick={() => setSubmitted(true)}>
             Send trip request by email

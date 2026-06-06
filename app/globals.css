@@ -764,6 +764,17 @@ li {
   margin-top: 18px;
 }
 
+.approvalActions {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.approvalActions .primaryButton,
+.approvalActions .secondaryButton {
+  width: 100%;
+}
+
 @media (max-width: 920px) {
   .compactPublicTitle,
   .compactPublicLead .pageTitle {

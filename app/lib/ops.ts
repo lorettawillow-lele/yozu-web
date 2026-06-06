@@ -29,6 +29,8 @@ export type TripCase = {
   fetchedAt: string;
   policyNotes: string;
   internalNotes: string;
+  recommendationHeadline: string;
+  approvalPrompt: string;
 };
 
 export type TripCaseIntakeInput = {
@@ -67,7 +69,9 @@ export const mockCases: TripCase[] = [
     sourceEvidence: "Mock supplier references for long-haul flight and refundable hotel options",
     fetchedAt: "2026-06-06 06:45 PT",
     policyNotes: "Fare rules and cancellation notes must be shown before approval.",
-    internalNotes: "Primary Founder Office use case for enterprise-facing investor travel."
+    internalNotes: "Primary Founder Office use case for enterprise-facing investor travel.",
+    recommendationHeadline: "Recommend the balanced arrival plan to preserve investor windows.",
+    approvalPrompt: "Approve shortlist A/B before any flight or hotel coordination step."
   },
   {
     id: "YC-2402",
@@ -94,7 +98,9 @@ export const mockCases: TripCase[] = [
     sourceEvidence: "Mock references for rail, flight, and hotel alternatives",
     fetchedAt: "2026-06-06 06:40 PT",
     policyNotes: "Approval needed before any change from policy baseline.",
-    internalNotes: "Primary Executive Assistant use case with approval gating."
+    internalNotes: "Primary Executive Assistant use case with approval gating.",
+    recommendationHeadline: "Recommend option A if arrival reliability matters more than fare delta.",
+    approvalPrompt: "EA confirms preferred option, then approver signs off before coordination."
   },
   {
     id: "YC-2403",
@@ -121,7 +127,9 @@ export const mockCases: TripCase[] = [
     sourceEvidence: "Mock evidence not attached yet",
     fetchedAt: "Not fetched yet",
     policyNotes: "Preflight only after options exist.",
-    internalNotes: "Leadership offsite use case; useful for group-travel workflow design."
+    internalNotes: "Leadership offsite use case; useful for group-travel workflow design.",
+    recommendationHeadline: "Build first-pass group travel options before room-block coordination.",
+    approvalPrompt: "Need ops review before approval path and budget checkpoint are finalized."
   }
 ];
 
@@ -167,6 +175,8 @@ export function buildTripCaseFromIntake(input: TripCaseIntakeInput): TripCase {
     internalNotes: [
       "Created from B-side intake.",
       input.contact ? `Reply contact: ${input.contact}` : "Reply contact missing."
-    ].join(" ")
+    ].join(" "),
+    recommendationHeadline: "Operator recommendation pending first pass.",
+    approvalPrompt: "Review intake, prepare options, then define approval ask."
   };
 }

@@ -40,8 +40,27 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
     return storedCase ?? seedCases.find((item) => item.id === caseId);
   }, [caseId, seedCases, storedCase]);
 
+  function appendInternalNote(currentNotes: string, nextNote: string) {
+    const trimmedCurrent = currentNotes.trim();
+    const trimmedNext = nextNote.trim();
+
+    if (!trimmedCurrent) {
+      return trimmedNext;
+    }
+
+    if (trimmedCurrent.endsWith(trimmedNext)) {
+      return trimmedCurrent;
+    }
+
+    return `${trimmedCurrent} ${trimmedNext}`;
+  }
+
   async function updateCaseAction(nextState: TripCase["state"], nextAction: string, note: string) {
     if (!tripCase) {
+      return;
+    }
+
+    if (tripCase.state === nextState && tripCase.nextAction === nextAction) {
       return;
     }
 
@@ -54,7 +73,7 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
       body: JSON.stringify({
         state: nextState,
         nextAction,
-        internalNotes: `${tripCase.internalNotes} ${note}`.trim()
+        internalNotes: appendInternalNote(tripCase.internalNotes, note)
       })
     });
 
@@ -141,7 +160,7 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
           <button
             className="primaryButton"
             type="button"
-            disabled={isUpdating}
+            disabled={isUpdating || tripCase.state === "options_sent"}
             onClick={() =>
               updateCaseAction(
                 "options_sent",
@@ -155,7 +174,7 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
           <button
             className="secondaryButton"
             type="button"
-            disabled={isUpdating}
+            disabled={isUpdating || tripCase.state === "awaiting_approval"}
             onClick={() =>
               updateCaseAction(
                 "awaiting_approval",
@@ -169,7 +188,7 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
           <button
             className="secondaryButton"
             type="button"
-            disabled={isUpdating}
+            disabled={isUpdating || tripCase.state === "coordinating"}
             onClick={() =>
               updateCaseAction(
                 "coordinating",
@@ -183,7 +202,7 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
           <button
             className="secondaryButton"
             type="button"
-            disabled={isUpdating}
+            disabled={isUpdating || tripCase.state === "reviewing"}
             onClick={() =>
               updateCaseAction(
                 "reviewing",

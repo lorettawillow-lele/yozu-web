@@ -25,18 +25,31 @@ const initialState: FormState = {
 
 function buildBody(form: FormState) {
   return [
-    "Yozu trip request",
+    "Hello Yozu team,",
     "",
-    `Destination: ${form.destination || "Not provided"}`,
-    `Dates: ${form.dates || "Not provided"}`,
-    `Travelers: ${form.travelers || "Not provided"}`,
-    `Budget: ${form.budget || "Not provided"}`,
-    `Trip stakes: ${form.stakes || "Not provided"}`,
-    `Constraints / preferences: ${form.constraints || "Not provided"}`,
-    `Reply contact: ${form.contact || "Not provided"}`,
+    "Please review this travel request.",
     "",
-    "Expected next step:",
-    "Please send back decision-ready options, source/disclosure context, and the next coordination step."
+    "Trip summary",
+    `- Destination: ${form.destination || "Not provided"}`,
+    `- Dates / flexibility: ${form.dates || "Not provided"}`,
+    `- Travelers: ${form.travelers || "Not provided"}`,
+    `- Budget range: ${form.budget || "Not provided"}`,
+    "",
+    "Trip stakes",
+    form.stakes || "Not provided",
+    "",
+    "Constraints / preferences",
+    form.constraints || "Not provided",
+    "",
+    "Reply contact",
+    form.contact || "Not provided",
+    "",
+    "Requested next step",
+    "- decision-ready options",
+    "- source / disclosure context",
+    "- recommended coordination path",
+    "",
+    "Thank you."
   ].join("\n");
 }
 
@@ -45,7 +58,7 @@ export function IntakeForm() {
   const [submitted, setSubmitted] = useState(false);
 
   const mailtoHref = useMemo(() => {
-    const subject = encodeURIComponent(`Yozu trip request: ${form.destination || "new itinerary"}`);
+    const subject = encodeURIComponent(`Yozu trip request | ${form.destination || "new itinerary"}`);
     const body = encodeURIComponent(buildBody(form));
     return `mailto:${BRAND.supportEmail}?subject=${subject}&body=${body}`;
   }, [form]);

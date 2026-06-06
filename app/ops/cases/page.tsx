@@ -1,4 +1,3 @@
-import { mockCases } from "../../lib/ops";
 import { PageShell } from "../../ui";
 import { CasesQueueClient } from "./queue-client";
 
@@ -75,7 +74,7 @@ export default function CasesPage() {
           </article>
         </div>
 
-        <CasesQueueClient seedCases={mockCases} />
+        <CasesQueueClient />
       </section>
     </PageShell>
   );

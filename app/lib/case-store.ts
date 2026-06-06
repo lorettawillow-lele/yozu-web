@@ -1,64 +1,32 @@
 import postgres from "postgres";
-import type { TripCase } from "./ops";
+import type { TripCase, TripCaseIntakeInput } from "./ops";
 
-const memoryCases = new Map<string, TripCase>();
+type CaseEventInput = {
+  caseId: string;
+  eventType: "case_created" | "case_updated" | "approval_state_changed";
+  actor?: string;
+  fromState?: TripCase["state"] | null;
+  toState?: TripCase["state"] | null;
+  message?: string;
+  metadata?: postgres.JSONValue;
+};
 
-function hasPostgres() {
-  return Boolean(process.env.POSTGRES_URL);
-}
+type CaseSql = postgres.Sql | postgres.TransactionSql;
 
 let sqlClient: postgres.Sql | null = null;
-let schemaReady = false;
 
 function getSql() {
-  if (!process.env.POSTGRES_URL) {
-    throw new Error("POSTGRES_URL is not configured");
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is not configured");
   }
 
   if (!sqlClient) {
-    sqlClient = postgres(process.env.POSTGRES_URL, {
+    sqlClient = postgres(process.env.DATABASE_URL, {
       ssl: "require"
     });
   }
 
   return sqlClient;
-}
-
-async function ensureSchema() {
-  if (!hasPostgres() || schemaReady) {
-    return;
-  }
-
-  const sql = getSql();
-  await sql`
-    create table if not exists case_core (
-      id text primary key,
-      company text not null,
-      office_name text not null,
-      requester text not null,
-      traveler text not null,
-      approver text not null,
-      trip_purpose text not null,
-      destination text not null,
-      timing text not null,
-      constraints jsonb not null,
-      approval_context text not null,
-      priority text not null,
-      state text not null,
-      owner text not null,
-      next_action text not null,
-      option_set_summary text not null,
-      source_evidence text not null,
-      fetched_at text not null,
-      policy_notes text not null,
-      internal_notes text not null,
-      recommendation_headline text not null default '',
-      approval_prompt text not null default '',
-      created_at timestamptz not null default now(),
-      updated_at timestamptz not null default now()
-    )
-  `;
-  schemaReady = true;
 }
 
 function mapRowToCase(row: Record<string, unknown>): TripCase {
@@ -90,16 +58,33 @@ function mapRowToCase(row: Record<string, unknown>): TripCase {
   };
 }
 
-export async function listStoredCases() {
-  if (!hasPostgres()) {
-    return Array.from(memoryCases.values());
-  }
+async function insertCaseEvent(sql: CaseSql, event: CaseEventInput) {
+  await sql`
+    insert into case_events (
+      case_id,
+      event_type,
+      actor,
+      from_state,
+      to_state,
+      message,
+      metadata
+    ) values (
+      ${event.caseId},
+      ${event.eventType},
+      ${event.actor ?? "system"},
+      ${event.fromState ?? null},
+      ${event.toState ?? null},
+      ${event.message ?? ""},
+      ${sql.json(event.metadata ?? {})}
+    )
+  `;
+}
 
-  await ensureSchema();
+export async function listStoredCases() {
   const sql = getSql();
   const rows = await sql`
     select *
-    from case_core
+    from cases
     order by created_at desc
   `;
 
@@ -107,15 +92,10 @@ export async function listStoredCases() {
 }
 
 export async function getStoredCase(id: string) {
-  if (!hasPostgres()) {
-    return memoryCases.get(id) ?? null;
-  }
-
-  await ensureSchema();
   const sql = getSql();
   const rows = await sql`
     select *
-    from case_core
+    from cases
     where id = ${id}
     limit 1
   `;
@@ -127,16 +107,9 @@ export async function getStoredCase(id: string) {
   return mapRowToCase(rows[0]);
 }
 
-export async function saveCase(nextCase: TripCase) {
-  if (!hasPostgres()) {
-    memoryCases.set(nextCase.id, nextCase);
-    return nextCase;
-  }
-
-  await ensureSchema();
-  const sql = getSql();
+async function upsertCase(sql: CaseSql, nextCase: TripCase) {
   await sql`
-    insert into case_core (
+    insert into cases (
       id,
       company,
       office_name,
@@ -169,7 +142,7 @@ export async function saveCase(nextCase: TripCase) {
       ${nextCase.tripPurpose},
       ${nextCase.destination},
       ${nextCase.timing},
-      ${JSON.stringify(nextCase.constraints)},
+      ${sql.json(nextCase.constraints)},
       ${nextCase.approvalContext},
       ${nextCase.priority},
       ${nextCase.state},
@@ -207,10 +180,49 @@ export async function saveCase(nextCase: TripCase) {
       approval_prompt = excluded.approval_prompt,
       updated_at = now()
   `;
+}
+
+export async function createCase(nextCase: TripCase, intake?: Partial<TripCaseIntakeInput>) {
+  const sql = getSql();
+
+  await sql.begin(async (transaction) => {
+    await upsertCase(transaction, nextCase);
+    await insertCaseEvent(transaction, {
+      caseId: nextCase.id,
+      eventType: "case_created",
+      toState: nextCase.state,
+      message: "Case created from intake submission.",
+      metadata: intake ? { intake } : {}
+    });
+  });
+
+  return nextCase;
+}
+
+export async function updateCase(nextCase: TripCase, previousCase: TripCase) {
+  const stateChanged = previousCase.state !== nextCase.state;
+  const sql = getSql();
+
+  await sql.begin(async (transaction) => {
+    await upsertCase(transaction, nextCase);
+    await insertCaseEvent(transaction, {
+      caseId: nextCase.id,
+      eventType: stateChanged ? "approval_state_changed" : "case_updated",
+      fromState: previousCase.state,
+      toState: nextCase.state,
+      message: stateChanged
+        ? `Case state changed from ${previousCase.state} to ${nextCase.state}.`
+        : "Case updated.",
+      metadata: {
+        previousNextAction: previousCase.nextAction,
+        nextAction: nextCase.nextAction
+      }
+    });
+  });
 
   return nextCase;
 }
 
 export function getCaseStoreMode() {
-  return hasPostgres() ? "postgres" : "memory-fallback";
+  return "postgres";
 }

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { buildTripCaseFromIntake, mockCases, type TripCaseIntakeInput } from "../../lib/ops";
-import { getCaseStoreMode, listStoredCases, saveCase } from "../../lib/case-store";
+import { buildTripCaseFromIntake, type TripCaseIntakeInput } from "../../lib/ops";
+import { createCase, getCaseStoreMode, listStoredCases } from "../../lib/case-store";
 
 export async function GET() {
   const stored = await listStoredCases();
 
   return NextResponse.json({
     mode: getCaseStoreMode(),
-    cases: [...stored, ...mockCases]
+    cases: stored
   });
 }
 
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     contact: payload.contact ?? ""
   });
 
-  await saveCase(tripCase);
+  await createCase(tripCase, payload);
 
   return NextResponse.json({
     mode: getCaseStoreMode(),

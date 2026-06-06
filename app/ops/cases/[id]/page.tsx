@@ -1,4 +1,3 @@
-import { mockCases } from "../../../lib/ops";
 import { PageShell } from "../../../ui";
 import { CaseDetailClient } from "./case-detail-client";
 
@@ -20,7 +19,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
         </div>
       </section>
 
-      <CaseDetailClient caseId={id} seedCases={mockCases} />
+      <CaseDetailClient caseId={id} />
     </PageShell>
   );
 }

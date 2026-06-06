@@ -6,7 +6,7 @@ import { IntakeForm } from "./intake-form";
 export default function IntakePage() {
   return (
     <PageShell>
-      <section className="section pageLead">
+      <section className="section pageLead compactPublicLead">
         <div className="sectionIntro wideIntro">
           <p className="eyebrow">Trip intake</p>
           <h1 className="pageTitle">Submit a real request without pretending the system already booked it.</h1>

@@ -10,7 +10,7 @@ export default function Home() {
         <div className="heroGrid landingGrid">
           <div className="heroCopy">
             <p className="eyebrow">AI Operating System for Enterprise Travel</p>
-            <h1>Trustworthy travel execution starts before booking.</h1>
+            <h1 className="compactPublicTitle">Trustworthy travel execution starts before booking.</h1>
             <p className="lede">
               {BRAND.productDisplayName} helps travelers move from messy intent to decision-ready,
               source-backed options with approval, disclosure, and preflight before checkout

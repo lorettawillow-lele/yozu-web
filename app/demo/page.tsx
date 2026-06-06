@@ -23,7 +23,7 @@ const optionCards = [
 export default function DemoPage() {
   return (
     <PageShell>
-      <section className="section pageLead">
+      <section className="section pageLead compactPublicLead">
         <div className="sectionIntro wideIntro">
           <p className="eyebrow">Demo flow</p>
           <h1 className="pageTitle">See how Yozu turns travel intent into a coordination-ready next step.</h1>

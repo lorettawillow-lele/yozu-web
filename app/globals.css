@@ -499,6 +499,25 @@ li {
   max-width: 680px;
 }
 
+.compactPublicTitle {
+  font-size: clamp(2.45rem, 5vw, 5rem);
+  letter-spacing: -0.06em;
+  line-height: 0.95;
+  margin-bottom: 18px;
+}
+
+.compactPublicLead .pageTitle {
+  font-size: clamp(2.2rem, 4.6vw, 4.7rem);
+  letter-spacing: -0.06em;
+  line-height: 0.95;
+  margin-bottom: 18px;
+}
+
+.compactPublicLead .lede {
+  font-size: clamp(1rem, 1.65vw, 1.1rem);
+  max-width: 680px;
+}
+
 .contactLead .wideIntro,
 .opsLead .wideIntro {
   max-width: 760px;
@@ -733,6 +752,12 @@ li {
 }
 
 @media (max-width: 920px) {
+  .compactPublicTitle,
+  .compactPublicLead .pageTitle {
+    font-size: clamp(1.95rem, 8.2vw, 3.15rem);
+    line-height: 0.98;
+  }
+
   .compactLead .pageTitle {
     font-size: clamp(2rem, 9vw, 3.4rem);
   }

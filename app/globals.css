@@ -542,3 +542,152 @@ li {
     justify-items: start;
   }
 }
+
+.opsSection {
+  gap: 28px;
+}
+
+.opsSummaryGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.summaryCard,
+.detailCard {
+  backdrop-filter: blur(20px);
+  background: var(--paper-strong);
+  border: 1px solid var(--line);
+  border-radius: 30px;
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+
+.tableShell {
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+.tableRow {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1.1fr 1fr 1fr 1fr .6fr 1.4fr;
+  padding: 18px 20px;
+}
+
+.tableHeader {
+  background: rgba(15, 34, 24, 0.92);
+  color: var(--cream);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: .8rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.tableLink {
+  background: rgba(255, 253, 245, 0.82);
+  border-top: 1px solid var(--line);
+}
+
+.tableLink span,
+.detailMetaStack span {
+  display: grid;
+  gap: 4px;
+}
+
+.tableLink strong,
+.detailList dd,
+.detailMetaStack {
+  color: var(--deep);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+}
+
+.tableLink small,
+.detailList dt {
+  color: var(--muted);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: .82rem;
+}
+
+.priority {
+  border-radius: 999px;
+  display: inline-flex;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: .8rem;
+  font-weight: 800;
+  justify-content: center;
+  line-height: 1;
+  padding: 8px 10px;
+  text-transform: uppercase;
+}
+
+.priority-urgent {
+  background: #ffe1cc;
+  color: #8f3600;
+}
+
+.priority-high {
+  background: #fff0bd;
+  color: #775300;
+}
+
+.priority-normal {
+  background: #deefe6;
+  color: #275c44;
+}
+
+.caseDetailGrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.detailList {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+}
+
+.detailList div {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.detailList div:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.detailList dt {
+  margin-bottom: 4px;
+}
+
+.detailList dd {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.detailMetaStack {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+@media (max-width: 920px) {
+  .opsSummaryGrid,
+  .caseDetailGrid,
+  .tableRow {
+    grid-template-columns: 1fr;
+  }
+
+  .tableHeader {
+    display: none;
+  }
+
+  .tableLink {
+    border-top: 1px solid var(--line);
+  }
+}

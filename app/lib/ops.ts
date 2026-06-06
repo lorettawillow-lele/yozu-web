@@ -31,6 +31,16 @@ export type TripCase = {
   internalNotes: string;
 };
 
+export type TripCaseIntakeInput = {
+  destination: string;
+  dates: string;
+  travelers: string;
+  budget: string;
+  stakes: string;
+  constraints: string;
+  contact: string;
+};
+
 export const mockCases: TripCase[] = [
   {
     id: "YC-2401",
@@ -126,4 +136,37 @@ export const stateLabels: Record<CaseState, string> = {
 
 export function getCaseById(id: string) {
   return mockCases.find((item) => item.id === id);
+}
+
+export function buildTripCaseFromIntake(input: TripCaseIntakeInput): TripCase {
+  const stamp = Date.now().toString().slice(-6);
+
+  return {
+    id: `OPS-${stamp}`,
+    company: "External intake",
+    officeName: "Executive Assistant / Founder Office intake",
+    requester: input.contact || "Reply contact pending",
+    traveler: input.travelers || "Traveler not specified",
+    approver: "Approval owner to be assigned",
+    tripPurpose: input.stakes || "Trip purpose to be clarified",
+    destination: input.destination || "Destination pending",
+    timing: input.dates || "Dates pending",
+    constraints: [
+      input.constraints || "Constraints pending",
+      input.budget ? `Budget context: ${input.budget}` : "Budget context pending"
+    ],
+    approvalContext: "Awaiting operator review before any approval checkpoint is defined.",
+    priority: "high",
+    state: "new",
+    owner: "Ops triage",
+    nextAction: "Review intake and convert it into a decision-ready workflow case.",
+    optionSetSummary: "Pending operator first pass",
+    sourceEvidence: "No external evidence attached yet",
+    fetchedAt: "Not fetched yet",
+    policyNotes: "No booking or payment action should occur from intake alone.",
+    internalNotes: [
+      "Created from B-side intake.",
+      input.contact ? `Reply contact: ${input.contact}` : "Reply contact missing."
+    ].join(" ")
+  };
 }

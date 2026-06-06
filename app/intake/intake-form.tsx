@@ -1,7 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { BRAND } from "../lib/brand";
+import { buildTripCaseFromIntake } from "../lib/ops";
+import { upsertStoredCase } from "../lib/ops-storage";
 
 type FormState = {
   destination: string;
@@ -54,14 +57,23 @@ function buildBody(form: FormState) {
 }
 
 export function IntakeForm() {
+  const router = useRouter();
   const [form, setForm] = useState<FormState>(initialState);
   const [submitted, setSubmitted] = useState(false);
+  const [createdCaseId, setCreatedCaseId] = useState("");
 
   const mailtoHref = useMemo(() => {
     const subject = encodeURIComponent(`Yozu trip request | ${form.destination || "new itinerary"}`);
     const body = encodeURIComponent(buildBody(form));
     return `mailto:${BRAND.supportEmail}?subject=${subject}&body=${body}`;
   }, [form]);
+
+  function handleCreateCase() {
+    const tripCase = buildTripCaseFromIntake(form);
+    upsertStoredCase(tripCase);
+    setCreatedCaseId(tripCase.id);
+    router.push(`/ops/cases/${tripCase.id}`);
+  }
 
   return (
     <div className="intakeLayout">
@@ -124,21 +136,25 @@ export function IntakeForm() {
         </label>
 
         <div className="formActions">
-          <a
-            className="primaryButton"
-            href={mailtoHref}
-            onClick={() => setSubmitted(true)}
-          >
-            Send trip request
+          <button className="primaryButton" type="button" onClick={handleCreateCase}>
+            Create workflow case
+          </button>
+          <a className="secondaryButton" href={mailtoHref} onClick={() => setSubmitted(true)}>
+            Send trip request by email
           </a>
           <a className="secondaryButton" href={`mailto:${BRAND.supportEmail}`}>
             Email directly instead
           </a>
         </div>
         <p className="helperText">
-          This opens your mail client with a prefilled request to {BRAND.supportEmail}. If your mail
-          client does not open, copy the details and email them directly.
+          Primary path: create a workflow case and send it into the operator queue. Email remains a
+          fallback path to {BRAND.supportEmail} if you want a direct human handoff.
         </p>
+        {createdCaseId ? (
+          <p className="statusNote">
+            Workflow case created: {createdCaseId}. Redirecting to the operator case detail view.
+          </p>
+        ) : null}
         {submitted ? (
           <p className="statusNote">
             Next step: send the email draft, then Yozu follows up with decision-ready options and the

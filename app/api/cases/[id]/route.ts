@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
-import { getStoredCase, updateCase } from "../../../lib/case-store";
+import { getStoredCase, saveCase } from "../../../lib/case-store";
+import { getCaseById } from "../../../lib/ops";
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const tripCase = await getStoredCase(id);
+  const stored = await getStoredCase(id);
+  const seed = getCaseById(id);
+  const tripCase = stored ?? seed;
 
   if (!tripCase) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -20,7 +23,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const tripCase = await getStoredCase(id);
+  const stored = await getStoredCase(id);
+  const seed = getCaseById(id);
+  const tripCase = stored ?? seed;
 
   if (!tripCase) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -29,11 +34,10 @@ export async function PATCH(
   const patch = (await request.json()) as Partial<typeof tripCase>;
   const nextCase = {
     ...tripCase,
-    ...patch,
-    id: tripCase.id
+    ...patch
   };
 
-  await updateCase(nextCase, tripCase);
+  await saveCase(nextCase);
 
   return NextResponse.json({ case: nextCase });
 }

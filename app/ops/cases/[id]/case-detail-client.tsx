@@ -7,9 +7,10 @@ import { stateLabels } from "../../../lib/ops";
 
 type CaseDetailClientProps = {
   caseId: string;
+  seedCases: TripCase[];
 };
 
-export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
+export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
   const [storedCase, setStoredCase] = useState<TripCase | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -36,8 +37,8 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
   }, [caseId]);
 
   const tripCase = useMemo(() => {
-    return storedCase;
-  }, [storedCase]);
+    return storedCase ?? seedCases.find((item) => item.id === caseId);
+  }, [caseId, seedCases, storedCase]);
 
   function appendInternalNote(currentNotes: string, nextNote: string) {
     const trimmedCurrent = currentNotes.trim();

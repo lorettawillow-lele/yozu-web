@@ -5,8 +5,12 @@ import { useEffect, useState } from "react";
 import type { TripCase } from "../../lib/ops";
 import { stateLabels } from "../../lib/ops";
 
-export function CasesQueueClient() {
-  const [cases, setCases] = useState<TripCase[]>([]);
+type QueueClientProps = {
+  seedCases: TripCase[];
+};
+
+export function CasesQueueClient({ seedCases }: QueueClientProps) {
+  const [cases, setCases] = useState<TripCase[]>(seedCases);
   const [mode, setMode] = useState("loading");
 
   useEffect(() => {
@@ -27,12 +31,12 @@ export function CasesQueueClient() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [seedCases]);
 
   return (
     <>
       <p className="helperText">
-        Case store mode: {mode}.
+        Case store mode: {mode === "memory-fallback" ? "temporary shared memory fallback" : mode}.
       </p>
       <div className="tableShell">
         <div className="tableHeader tableRow">

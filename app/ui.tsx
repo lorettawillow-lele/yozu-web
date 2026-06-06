@@ -5,6 +5,7 @@ import { BRAND } from "./lib/brand";
 const navLinks = [
   { href: "/", label: "Landing" },
   { href: "/intake", label: "Trip intake" },
+  { href: "/ops/cases", label: "Operator Queue" },
   { href: "/demo", label: "Demo flow" },
   { href: "/contact", label: "Contact" }
 ] as const;

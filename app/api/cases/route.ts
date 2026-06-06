@@ -1,19 +1,22 @@
 import { NextResponse } from "next/server";
-import { buildTripCaseFromIntake, type TripCaseIntakeInput } from "../../lib/ops";
-import { createCase, getCaseStoreMode, listStoredCases } from "../../lib/case-store";
+import { buildTripCaseFromIntake, mockCases, type TripCaseIntakeInput } from "../../lib/ops";
+import { getCaseStoreMode, listStoredCases, saveCase } from "../../lib/case-store";
 
 export async function GET() {
   const stored = await listStoredCases();
 
   return NextResponse.json({
     mode: getCaseStoreMode(),
-    cases: stored
+    cases: [...stored, ...mockCases]
   });
 }
 
 export async function POST(request: Request) {
   const payload = (await request.json()) as Partial<TripCaseIntakeInput>;
   const tripCase = buildTripCaseFromIntake({
+    company: payload.company ?? "",
+    approvalOwner: payload.approvalOwner ?? "",
+    decisionDeadline: payload.decisionDeadline ?? "",
     destination: payload.destination ?? "",
     dates: payload.dates ?? "",
     travelers: payload.travelers ?? "",
@@ -23,7 +26,7 @@ export async function POST(request: Request) {
     contact: payload.contact ?? ""
   });
 
-  await createCase(tripCase, payload);
+  await saveCase(tripCase);
 
   return NextResponse.json({
     mode: getCaseStoreMode(),

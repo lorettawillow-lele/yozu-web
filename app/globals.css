@@ -432,6 +432,7 @@ li {
 }
 
 .intakeForm input,
+.intakeForm select,
 .intakeForm textarea {
   background: rgba(255, 253, 245, 0.92);
   border: 1px solid rgba(23, 32, 24, 0.18);
@@ -445,12 +446,22 @@ li {
   min-height: 120px;
 }
 
+.intakeForm select {
+  min-height: 54px;
+  padding: 14px 16px;
+}
+
 .statusNote {
   background: rgba(215, 247, 74, 0.18);
   border: 1px solid rgba(47, 109, 79, 0.2);
   border-radius: 18px;
   margin: 0;
   padding: 14px 16px;
+}
+
+.statusPanel {
+  display: grid;
+  gap: 14px;
 }
 
 .optionFacts {

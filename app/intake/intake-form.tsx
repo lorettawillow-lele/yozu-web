@@ -1,10 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { BRAND } from "../lib/brand";
 
 type FormState = {
+  company: string;
+  approvalOwner: string;
+  decisionDeadline: string;
   destination: string;
   dates: string;
   travelers: string;
@@ -15,6 +17,9 @@ type FormState = {
 };
 
 const initialState: FormState = {
+  company: "",
+  approvalOwner: "",
+  decisionDeadline: "",
   destination: "",
   dates: "",
   travelers: "",
@@ -31,6 +36,9 @@ function buildBody(form: FormState) {
     "Please review this travel request.",
     "",
     "Trip summary",
+    `- Company / account: ${form.company || "Not provided"}`,
+    `- Approval owner: ${form.approvalOwner || "Not provided"}`,
+    `- Decision deadline: ${form.decisionDeadline || "Not provided"}`,
     `- Destination: ${form.destination || "Not provided"}`,
     `- Dates / flexibility: ${form.dates || "Not provided"}`,
     `- Travelers: ${form.travelers || "Not provided"}`,
@@ -55,7 +63,6 @@ function buildBody(form: FormState) {
 }
 
 export function IntakeForm() {
-  const router = useRouter();
   const [form, setForm] = useState<FormState>(initialState);
   const [submitted, setSubmitted] = useState(false);
   const [createdCaseId, setCreatedCaseId] = useState("");
@@ -80,7 +87,7 @@ export function IntakeForm() {
 
     if (payload.case?.id) {
       setCreatedCaseId(payload.case.id);
-      router.push(`/ops/cases/${payload.case.id}`);
+      setIsCreating(false);
       return;
     }
 
@@ -90,6 +97,38 @@ export function IntakeForm() {
   return (
     <div className="intakeLayout">
       <form className="intakeForm">
+        <label>
+          Company / Account
+          <input
+            value={form.company}
+            onChange={(event) => setForm({ ...form, company: event.target.value })}
+            placeholder="Northstar Capital"
+          />
+        </label>
+        <label>
+          Approval owner
+          <select
+            value={form.approvalOwner}
+            onChange={(event) => setForm({ ...form, approvalOwner: event.target.value })}
+          >
+            <option value="">Select approval owner</option>
+            <option value="CEO">CEO</option>
+            <option value="Founder">Founder</option>
+            <option value="Managing Partner">Managing Partner</option>
+          </select>
+        </label>
+        <label>
+          Decision deadline
+          <select
+            value={form.decisionDeadline}
+            onChange={(event) => setForm({ ...form, decisionDeadline: event.target.value })}
+          >
+            <option value="">Select decision deadline</option>
+            <option value="Today">Today</option>
+            <option value="Tomorrow">Tomorrow</option>
+            <option value="This week">This week</option>
+          </select>
+        </label>
         <label>
           Destination
           <input
@@ -163,9 +202,17 @@ export function IntakeForm() {
           fallback path to {BRAND.supportEmail} if you want a direct human handoff.
         </p>
         {createdCaseId ? (
-          <p className="statusNote">
-            Workflow case created: {createdCaseId}. Redirecting to the operator case detail view.
-          </p>
+          <div className="statusPanel">
+            <p className="statusNote">Workflow case created: {createdCaseId}.</p>
+            <div className="formActions">
+              <a className="primaryButton" href="/ops/cases">
+                View Queue
+              </a>
+              <a className="secondaryButton" href={`/ops/cases/${createdCaseId}`}>
+                Open case detail
+              </a>
+            </div>
+          </div>
         ) : null}
         {submitted ? (
           <p className="statusNote">

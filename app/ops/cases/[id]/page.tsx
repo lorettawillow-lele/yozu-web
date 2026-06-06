@@ -16,7 +16,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <PageShell>
-      <section className="section pageLead opsLead">
+      <section className="section pageLead opsLead compactLead">
         <div className="sectionIntro wideIntro">
           <p className="eyebrow">Case detail</p>
           <h1 className="pageTitle">
@@ -24,7 +24,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
           </h1>
           <p className="lede">
             Internal operator view for handling a structured trip case. Mock data for workflow design
-            only; no supplier execution or payment action occurs here.
+            only. The goal here is case clarity, disclosure context, and approval-ready coordination.
           </p>
         </div>
       </section>

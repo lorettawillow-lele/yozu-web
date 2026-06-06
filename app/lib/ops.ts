@@ -36,27 +36,28 @@ export const mockCases: TripCase[] = [
     id: "YC-2401",
     company: "Willow Ventures",
     officeName: "Founder Office",
-    requester: "Loretta Willow",
+    requester: "Annie Li",
     traveler: "Loretta Willow",
-    approver: "Board observer check only",
-    tripPurpose: "UCWS Singapore investor + partner meetings",
-    destination: "Singapore",
-    timing: "June 12-16, flexible by +/- 1 day",
+    approver: "Founder Office principal",
+    tripPurpose: "Multi-city investor trip before partner meetings",
+    destination: "San Francisco -> Singapore -> Hong Kong",
+    timing: "June 12-18, flexible by +/- 1 day",
     constraints: [
       "No red-eye before Demo Day",
-      "Prefer refundable hotel on first night",
-      "Keep investor breakfast windows open"
+      "Keep investor breakfast windows open",
+      "First-night hotel should be refundable"
     ],
-    approvalContext: "Founder can approve itinerary direction; final checkout coordination still explicit.",
+    approvalContext:
+      "Founder Office narrows options first; checkout coordination still waits for explicit approval.",
     priority: "urgent",
     state: "reviewing",
-    owner: "Yozu operator",
-    nextAction: "Draft 2 decision-ready options and attach disclosure notes.",
-    optionSetSummary: "Balanced arrival plan vs lower-cost tighter route",
-    sourceEvidence: "Mock supplier references for flight + hotel bundle",
+    owner: "Founder Office queue",
+    nextAction: "Draft 2 decision-ready investor-trip options with disclosure notes.",
+    optionSetSummary: "Balanced arrival plan vs tighter lower-cost multi-city route",
+    sourceEvidence: "Mock supplier references for long-haul flight and refundable hotel options",
     fetchedAt: "2026-06-06 06:45 PT",
-    policyNotes: "Cancellation and fare-rule context must be shown before approval.",
-    internalNotes: "Phase 2 mock case. Use founder-office framing, not consumer leisure tone."
+    policyNotes: "Fare rules and cancellation notes must be shown before approval.",
+    internalNotes: "Primary Founder Office use case for enterprise-facing investor travel."
   },
   {
     id: "YC-2402",
@@ -65,7 +66,7 @@ export const mockCases: TripCase[] = [
     requester: "Mina Park",
     traveler: "Daniel Reyes",
     approver: "Chief of Staff",
-    tripPurpose: "Board meeting + client dinner sequence",
+    tripPurpose: "Board meeting travel with post-meeting client dinner",
     destination: "New York + Boston",
     timing: "June 20-23",
     constraints: [
@@ -73,42 +74,44 @@ export const mockCases: TripCase[] = [
       "Avoid last-flight-of-day risk",
       "Hotel must support late arrival"
     ],
-    approvalContext: "Options can be sent to EA first, then forwarded for executive approval.",
+    approvalContext:
+      "EA reviews first, then forwards the selected shortlist for executive approval.",
     priority: "high",
     state: "awaiting_approval",
     owner: "EA workflow queue",
-    nextAction: "Hold coordination until approver selects option A or B.",
-    optionSetSummary: "Executive convenience route vs lower-cost split-city tradeoff",
-    sourceEvidence: "Mock references for rail + flight + hotel alternatives",
+    nextAction: "Hold coordination until the EA confirms option A or B with the approver.",
+    optionSetSummary: "Executive-convenience route vs lower-cost split-city tradeoff",
+    sourceEvidence: "Mock references for rail, flight, and hotel alternatives",
     fetchedAt: "2026-06-06 06:40 PT",
     policyNotes: "Approval needed before any change from policy baseline.",
-    internalNotes: "Good sample for multi-city enterprise workflow without payment execution."
+    internalNotes: "Primary Executive Assistant use case with approval gating."
   },
   {
     id: "YC-2403",
     company: "Aster Labs",
-    officeName: "Founder Office",
-    requester: "Ava Chen",
-    traveler: "Ava Chen",
-    approver: "Self-approval with finance notification",
-    tripPurpose: "Founder offsite with candidate meetings",
+    officeName: "Office of the COO",
+    requester: "Sara Lin",
+    traveler: "Leadership team (6)",
+    approver: "Chief of Staff + finance lead",
+    tripPurpose: "Leadership offsite with candidate and partner sessions",
     destination: "Austin",
-    timing: "July 8-10",
+    timing: "July 8-11",
     constraints: [
-      "Need walkable hotel near meetings",
-      "Avoid morning arrival",
-      "Budget cap shared with finance"
+      "Need walkable hotel near meeting venue",
+      "Keep arrivals before team dinner window",
+      "Stay inside shared lodging and air budget"
     ],
-    approvalContext: "Finance gets summary after approval checkpoint, not before intake.",
+    approvalContext:
+      "Operations aligns on room block and travel window before the final approval checkpoint.",
     priority: "normal",
     state: "new",
-    owner: "Unassigned",
-    nextAction: "Assign operator and normalize request fields.",
-    optionSetSummary: "Pending first pass",
-    sourceEvidence: "Not yet attached",
+    owner: "Ops triage",
+    nextAction: "Assign operator and normalize the offsite request fields.",
+    optionSetSummary: "Pending first pass for group travel options",
+    sourceEvidence: "Mock evidence not attached yet",
     fetchedAt: "Not fetched yet",
     policyNotes: "Preflight only after options exist.",
-    internalNotes: "Useful seed case for queue empty-state testing."
+    internalNotes: "Leadership offsite use case; useful for group-travel workflow design."
   }
 ];
 

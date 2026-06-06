@@ -487,6 +487,34 @@ li {
   padding: 0 28px 40px;
 }
 
+.compactLead .pageTitle {
+  font-size: clamp(2.1rem, 4.4vw, 4.4rem);
+  letter-spacing: -0.055em;
+  line-height: 0.96;
+  margin-bottom: 18px;
+}
+
+.compactLead .lede {
+  font-size: clamp(1rem, 1.7vw, 1.12rem);
+  max-width: 680px;
+}
+
+.contactLead .wideIntro,
+.opsLead .wideIntro {
+  max-width: 760px;
+}
+
+.contactEmail {
+  color: var(--cream);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(1.4rem, 3vw, 2.15rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+  margin: 8px 0 14px;
+  word-break: break-word;
+}
+
 .footerMeta {
   display: grid;
   gap: 8px;
@@ -544,13 +572,13 @@ li {
 }
 
 .opsSection {
-  gap: 28px;
+  gap: 22px;
 }
 
 .opsSummaryGrid {
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .summaryCard,
@@ -560,7 +588,33 @@ li {
   border: 1px solid var(--line);
   border-radius: 30px;
   box-shadow: var(--shadow);
-  padding: 24px;
+  padding: 22px;
+}
+
+.useCaseGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.useCaseCard {
+  backdrop-filter: blur(20px);
+  background: rgba(255, 253, 245, 0.72);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  padding: 22px;
+}
+
+.useCaseCard p {
+  margin: 0 0 14px;
+}
+
+.useCaseMeta {
+  color: var(--muted);
+  display: block;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: .83rem;
+  line-height: 1.5;
 }
 
 .tableShell {
@@ -572,8 +626,8 @@ li {
 .tableRow {
   display: grid;
   gap: 14px;
-  grid-template-columns: 1.1fr 1fr 1fr 1fr .6fr 1.4fr;
-  padding: 18px 20px;
+  grid-template-columns: 1.2fr 1fr 1fr .95fr .6fr 1.25fr;
+  padding: 16px 18px;
 }
 
 .tableHeader {
@@ -589,6 +643,7 @@ li {
 .tableLink {
   background: rgba(255, 253, 245, 0.82);
   border-top: 1px solid var(--line);
+  font-size: .94rem;
 }
 
 .tableLink span,
@@ -610,6 +665,7 @@ li {
   color: var(--muted);
   font-family: ui-sans-serif, system-ui, sans-serif;
   font-size: .82rem;
+  line-height: 1.45;
 }
 
 .priority {
@@ -677,7 +733,12 @@ li {
 }
 
 @media (max-width: 920px) {
+  .compactLead .pageTitle {
+    font-size: clamp(2rem, 9vw, 3.4rem);
+  }
+
   .opsSummaryGrid,
+  .useCaseGrid,
   .caseDetailGrid,
   .tableRow {
     grid-template-columns: 1fr;

@@ -4,7 +4,7 @@ import { PageShell } from "../ui";
 export default function ContactPage() {
   return (
     <PageShell>
-      <section className="section pageLead">
+      <section className="section pageLead compactLead contactLead">
         <div className="sectionIntro wideIntro">
           <p className="eyebrow">Human follow-up</p>
           <h1 className="pageTitle">Use Yozu when the trip is important enough that mistakes are expensive.</h1>
@@ -18,7 +18,7 @@ export default function ContactPage() {
       <section className="section contactSection">
         <article className="contactCard emphasisCard">
           <span className="eyebrow">Primary channel</span>
-          <h2>{BRAND.supportEmail}</h2>
+          <p className="contactEmail">{BRAND.supportEmail}</p>
           <p>
             Best for trip requests, demo follow-up, and early access conversations. This mailbox is
             live and tested.

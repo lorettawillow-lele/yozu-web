@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { buildTripCaseFromIntake, mockCases, type TripCaseIntakeInput } from "../../lib/ops";
+import {
+  buildTripCaseFromIntake,
+  mockCases,
+  sanitizeCaseForPublicOps,
+  type TripCaseIntakeInput
+} from "../../lib/ops";
 import { getCaseStoreMode, listStoredCases, saveCase } from "../../lib/case-store";
 
 export async function GET() {
@@ -7,7 +12,7 @@ export async function GET() {
 
   return NextResponse.json({
     mode: getCaseStoreMode(),
-    cases: [...stored, ...mockCases]
+    cases: [...stored.map((item) => sanitizeCaseForPublicOps(item)), ...mockCases]
   });
 }
 

@@ -60,6 +60,10 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
       return;
     }
 
+    if (tripCase.isRedactedPublicView) {
+      return;
+    }
+
     if (tripCase.state === nextState && tripCase.nextAction === nextAction) {
       return;
     }
@@ -108,6 +112,12 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
         <span className="eyebrow">Current state</span>
         <h2>{stateLabels[tripCase.state]}</h2>
         <p>{tripCase.nextAction}</p>
+        {tripCase.isRedactedPublicView ? (
+          <p className="helperText">
+            This case came from a real intake path, so the public demo surface only shows a redacted
+            operator placeholder.
+          </p>
+        ) : null}
         <div className="detailMetaStack">
           <span>Owner: {tripCase.owner}</span>
           <span>Priority: {tripCase.priority}</span>
@@ -152,68 +162,77 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
       <article className="detailCard">
         <span className="eyebrow">Approval-state actions</span>
         <h3>Move the case through the next operator checkpoint.</h3>
-        <p className="helperText">
-          These actions are still mock workflow controls, but they now update the same case record
-          the queue/detail reads.
-        </p>
-        <div className="approvalActions">
-          <button
-            className="primaryButton"
-            type="button"
-            disabled={isUpdating || tripCase.state === "options_sent"}
-            onClick={() =>
-              updateCaseAction(
-                "options_sent",
-                "Options sent to requester; waiting for approval response.",
-                "Operator moved case to options_sent."
-              )
-            }
-          >
-            Send options for approval
-          </button>
-          <button
-            className="secondaryButton"
-            type="button"
-            disabled={isUpdating || tripCase.state === "awaiting_approval"}
-            onClick={() =>
-              updateCaseAction(
-                "awaiting_approval",
-                "Approval requested; hold coordination until explicit sign-off.",
-                "Case marked awaiting approval."
-              )
-            }
-          >
-            Mark awaiting approval
-          </button>
-          <button
-            className="secondaryButton"
-            type="button"
-            disabled={isUpdating || tripCase.state === "coordinating"}
-            onClick={() =>
-              updateCaseAction(
-                "coordinating",
-                "Approval received; begin preflight and coordination checklist.",
-                "Case moved into coordinating."
-              )
-            }
-          >
-            Approval received
-          </button>
-          <button
-            className="secondaryButton"
-            type="button"
-            disabled={isUpdating || tripCase.state === "reviewing"}
-            onClick={() =>
-              updateCaseAction(
-                "reviewing",
-                "Needs replanning before any approval ask is sent.",
-                "Case sent back to reviewing."
-              )
-            }
-          >
-            Return to review
-          </button>
-        </div>
+        {tripCase.isRedactedPublicView ? (
+          <p className="helperText">
+            Approval-state controls stay interactive on mock operator demo cases only. Real intake
+            cases are redacted on public routes and continue inside a protected workflow.
+          </p>
+        ) : (
+          <>
+            <p className="helperText">
+              These actions are still mock workflow controls, but they now update the same case record
+              the queue/detail reads.
+            </p>
+            <div className="approvalActions">
+              <button
+                className="primaryButton"
+                type="button"
+                disabled={isUpdating || tripCase.state === "options_sent"}
+                onClick={() =>
+                  updateCaseAction(
+                    "options_sent",
+                    "Options sent to requester; waiting for approval response.",
+                    "Operator moved case to options_sent."
+                  )
+                }
+              >
+                Send options for approval
+              </button>
+              <button
+                className="secondaryButton"
+                type="button"
+                disabled={isUpdating || tripCase.state === "awaiting_approval"}
+                onClick={() =>
+                  updateCaseAction(
+                    "awaiting_approval",
+                    "Approval requested; hold coordination until explicit sign-off.",
+                    "Case marked awaiting approval."
+                  )
+                }
+              >
+                Mark awaiting approval
+              </button>
+              <button
+                className="secondaryButton"
+                type="button"
+                disabled={isUpdating || tripCase.state === "coordinating"}
+                onClick={() =>
+                  updateCaseAction(
+                    "coordinating",
+                    "Approval received; begin preflight and coordination checklist.",
+                    "Case moved into coordinating."
+                  )
+                }
+              >
+                Approval received
+              </button>
+              <button
+                className="secondaryButton"
+                type="button"
+                disabled={isUpdating || tripCase.state === "reviewing"}
+                onClick={() =>
+                  updateCaseAction(
+                    "reviewing",
+                    "Needs replanning before any approval ask is sent.",
+                    "Case sent back to reviewing."
+                  )
+                }
+              >
+                Return to review
+              </button>
+            </div>
+          </>
+        )}
       </article>
     </section>
   );

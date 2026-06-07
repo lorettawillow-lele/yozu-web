@@ -31,6 +31,7 @@ export type TripCase = {
   internalNotes: string;
   recommendationHeadline: string;
   approvalPrompt: string;
+  isRedactedPublicView?: boolean;
 };
 
 export type TripCaseIntakeInput = {
@@ -147,6 +148,33 @@ export const stateLabels: Record<CaseState, string> = {
 
 export function getCaseById(id: string) {
   return mockCases.find((item) => item.id === id);
+}
+
+export function sanitizeCaseForPublicOps(input: TripCase): TripCase {
+  return {
+    ...input,
+    company: "Protected intake account",
+    officeName: "Protected intake workflow",
+    requester: "Protected requester",
+    traveler: "Protected traveler",
+    approver: "Protected approval owner",
+    tripPurpose: "Protected intake request",
+    destination: "Protected destination",
+    timing: "Protected timing",
+    constraints: ["Sensitive intake details are hidden on the public demo surface."],
+    approvalContext:
+      "Protected internal approval routing. Public demo view only exposes sanitized intake cases.",
+    owner: "Protected ops case",
+    nextAction: "Internal operator follow-up continues in the protected workflow surface.",
+    optionSetSummary: "Protected intake case; public surface only shows a redacted workflow placeholder.",
+    sourceEvidence: "No public evidence is shown for protected intake cases.",
+    fetchedAt: "Protected",
+    policyNotes: "Public ops demo keeps real intake data redacted.",
+    internalNotes: "Protected internal notes are hidden on the public demo surface.",
+    recommendationHeadline: "Protected intake case awaiting internal operator handling.",
+    approvalPrompt: "No public approval interaction is exposed for protected intake cases.",
+    isRedactedPublicView: true
+  };
 }
 
 export function buildTripCaseFromIntake(input: TripCaseIntakeInput): TripCase {

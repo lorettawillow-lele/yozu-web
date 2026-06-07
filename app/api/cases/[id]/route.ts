@@ -15,7 +15,9 @@ export async function GET(
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  return NextResponse.json({ case: stored ? sanitizeCaseForPublicOps(tripCase) : tripCase });
+  return NextResponse.json({
+    case: stored && !seed ? sanitizeCaseForPublicOps(tripCase) : tripCase
+  });
 }
 
 export async function PATCH(

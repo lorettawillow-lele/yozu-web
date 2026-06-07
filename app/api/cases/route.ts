@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   buildTripCaseFromIntake,
+  getCaseById,
   mockCases,
   sanitizeCaseForPublicOps,
   type TripCaseIntakeInput
@@ -9,10 +10,15 @@ import { getCaseStoreMode, listStoredCases, saveCase } from "../../lib/case-stor
 
 export async function GET() {
   const stored = await listStoredCases();
+  const storedById = new Map(stored.map((item) => [item.id, item]));
+  const visibleStored = stored
+    .filter((item) => !getCaseById(item.id))
+    .map((item) => sanitizeCaseForPublicOps(item));
+  const mergedMockCases = mockCases.map((item) => storedById.get(item.id) ?? item);
 
   return NextResponse.json({
     mode: getCaseStoreMode(),
-    cases: [...stored.map((item) => sanitizeCaseForPublicOps(item)), ...mockCases]
+    cases: [...visibleStored, ...mergedMockCases]
   });
 }
 
@@ -35,6 +41,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     mode: getCaseStoreMode(),
-    case: tripCase
+    id: tripCase.id,
+    status: "created"
   });
 }

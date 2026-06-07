@@ -83,10 +83,10 @@ export function IntakeForm() {
       },
       body: JSON.stringify(form)
     });
-    const payload = (await response.json()) as { case?: { id: string } };
+    const payload = (await response.json()) as { id?: string };
 
-    if (payload.case?.id) {
-      setCreatedCaseId(payload.case.id);
+    if (payload.id) {
+      setCreatedCaseId(payload.id);
       setIsCreating(false);
       return;
     }

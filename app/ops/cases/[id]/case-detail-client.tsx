@@ -113,20 +113,31 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
 
   return (
     <section className="section caseDetailGrid">
-      <article className="detailCard emphasisCard">
-        <span className="eyebrow">Current state</span>
-        <h2>{stateLabels[tripCase.state]}</h2>
-        <p>{tripCase.nextAction}</p>
+      <article className="detailCard emphasisCard statusCard">
+        <div className="statusHeader">
+          <span className="eyebrow">Current state</span>
+          <h2 className="statusState">{stateLabels[tripCase.state]}</h2>
+          <p className="statusAction">{tripCase.nextAction}</p>
+        </div>
         {tripCase.isRedactedPublicView ? (
-          <p className="helperText">
+          <p className="helperText protectedNotice">
             This case came from a real intake path, so the public demo surface only shows a redacted
             operator placeholder.
           </p>
         ) : null}
-        <div className="detailMetaStack">
-          <span>Owner: {tripCase.owner}</span>
-          <span>Priority: {tripCase.priority}</span>
-          <span>Approver: {tripCase.approver}</span>
+        <div className="statusMetaGrid">
+          <div className="statusMetaItem">
+            <span className="statusMetaLabel">Owner</span>
+            <strong className="statusMetaValue">{tripCase.owner}</strong>
+          </div>
+          <div className="statusMetaItem">
+            <span className="statusMetaLabel">Priority</span>
+            <strong className="statusMetaValue">{tripCase.priority}</strong>
+          </div>
+          <div className="statusMetaItem">
+            <span className="statusMetaLabel">Approver</span>
+            <strong className="statusMetaValue">{tripCase.approver}</strong>
+          </div>
         </div>
       </article>
 

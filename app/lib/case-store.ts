@@ -1,7 +1,8 @@
 import postgres from "postgres";
-import type { TripCase } from "./ops";
+import type { AuditEvent, TripCase } from "./ops";
 
 const memoryCases = new Map<string, TripCase>();
+const memoryEvents = new Map<string, AuditEvent[]>();
 
 function hasPostgres() {
   return Boolean(process.env.POSTGRES_URL);
@@ -33,6 +34,7 @@ async function ensureSchema() {
   await sql`
     create table if not exists case_core (
       id text primary key,
+      trip_case_id text not null,
       company text not null,
       office_name text not null,
       requester text not null,
@@ -58,12 +60,36 @@ async function ensureSchema() {
       updated_at timestamptz not null default now()
     )
   `;
+  await sql`
+    alter table case_core
+    add column if not exists trip_case_id text not null default ''
+  `;
+  await sql`
+    update case_core
+    set trip_case_id = id
+    where trip_case_id = ''
+  `;
+  await sql`
+    create table if not exists audit_event (
+      event_id text primary key,
+      trip_case_id text not null,
+      request_id text not null,
+      actor_type text not null,
+      action text not null,
+      before_state text not null,
+      after_state text not null,
+      created_at timestamptz not null default now(),
+      source text not null,
+      summary text not null
+    )
+  `;
   schemaReady = true;
 }
 
 function mapRowToCase(row: Record<string, unknown>): TripCase {
   return {
     id: String(row.id),
+    tripCaseId: String(row.trip_case_id || row.id),
     company: String(row.company),
     officeName: String(row.office_name),
     requester: String(row.requester),
@@ -87,6 +113,21 @@ function mapRowToCase(row: Record<string, unknown>): TripCase {
     internalNotes: String(row.internal_notes),
     recommendationHeadline: String(row.recommendation_headline),
     approvalPrompt: String(row.approval_prompt)
+  };
+}
+
+function mapRowToEvent(row: Record<string, unknown>): AuditEvent {
+  return {
+    eventId: String(row.event_id),
+    tripCaseId: String(row.trip_case_id),
+    requestId: String(row.request_id),
+    actorType: row.actor_type as AuditEvent["actorType"],
+    action: row.action as AuditEvent["action"],
+    beforeState: row.before_state as AuditEvent["beforeState"],
+    afterState: row.after_state as AuditEvent["afterState"],
+    createdAt: String(row.created_at),
+    source: String(row.source),
+    summary: String(row.summary)
   };
 }
 
@@ -127,6 +168,59 @@ export async function getStoredCase(id: string) {
   return mapRowToCase(rows[0]);
 }
 
+export async function listAuditEvents(tripCaseId: string) {
+  if (!hasPostgres()) {
+    return memoryEvents.get(tripCaseId) ?? [];
+  }
+
+  await ensureSchema();
+  const sql = getSql();
+  const rows = await sql`
+    select *
+    from audit_event
+    where trip_case_id = ${tripCaseId}
+    order by created_at desc
+  `;
+
+  return rows.map((row) => mapRowToEvent(row));
+}
+
+export async function saveAuditEvent(event: AuditEvent) {
+  if (!hasPostgres()) {
+    const current = memoryEvents.get(event.tripCaseId) ?? [];
+    memoryEvents.set(event.tripCaseId, [event, ...current]);
+    return event;
+  }
+
+  await ensureSchema();
+  const sql = getSql();
+  await sql`
+    insert into audit_event (
+      event_id,
+      trip_case_id,
+      request_id,
+      actor_type,
+      action,
+      before_state,
+      after_state,
+      source,
+      summary
+    ) values (
+      ${event.eventId},
+      ${event.tripCaseId},
+      ${event.requestId},
+      ${event.actorType},
+      ${event.action},
+      ${event.beforeState},
+      ${event.afterState},
+      ${event.source},
+      ${event.summary}
+    )
+  `;
+
+  return event;
+}
+
 export async function saveCase(nextCase: TripCase) {
   if (!hasPostgres()) {
     memoryCases.set(nextCase.id, nextCase);
@@ -138,6 +232,7 @@ export async function saveCase(nextCase: TripCase) {
   await sql`
     insert into case_core (
       id,
+      trip_case_id,
       company,
       office_name,
       requester,
@@ -161,6 +256,7 @@ export async function saveCase(nextCase: TripCase) {
       approval_prompt
     ) values (
       ${nextCase.id},
+      ${nextCase.tripCaseId},
       ${nextCase.company},
       ${nextCase.officeName},
       ${nextCase.requester},
@@ -184,6 +280,7 @@ export async function saveCase(nextCase: TripCase) {
       ${nextCase.approvalPrompt}
     )
     on conflict (id) do update set
+      trip_case_id = excluded.trip_case_id,
       company = excluded.company,
       office_name = excluded.office_name,
       requester = excluded.requester,

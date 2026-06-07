@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import type { TripCase } from "../../../lib/ops";
+import type { AuditEvent, TripCase } from "../../../lib/ops";
 import { stateLabels } from "../../../lib/ops";
 
 type CaseDetailClientProps = {
@@ -12,6 +12,7 @@ type CaseDetailClientProps = {
 
 export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
   const [storedCase, setStoredCase] = useState<TripCase | null>(null);
+  const [events, setEvents] = useState<AuditEvent[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
@@ -23,9 +24,10 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
         return;
       }
 
-      const payload = (await response.json()) as { case?: TripCase };
+      const payload = (await response.json()) as { case?: TripCase; events?: AuditEvent[] };
       if (!cancelled && payload.case) {
         setStoredCase(payload.case);
+        setEvents(payload.events ?? []);
       }
     }
 
@@ -81,10 +83,13 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
       })
     });
 
-    const payload = (await response.json()) as { case?: TripCase };
+    const payload = (await response.json()) as { case?: TripCase; requestId?: string };
     if (payload.case) {
       setStoredCase(payload.case);
     }
+    const eventResponse = await fetch(`/api/cases/${caseId}`, { cache: "no-store" });
+    const eventPayload = (await eventResponse.json()) as { events?: AuditEvent[] };
+    setEvents(eventPayload.events ?? []);
     setIsUpdating(false);
   }
 
@@ -149,6 +154,7 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
       <article className="detailCard">
         <span className="eyebrow">Decision-ready output stub</span>
         <dl className="detailList">
+          <div><dt>trip_case_id</dt><dd>{tripCase.tripCaseId}</dd></div>
           <div><dt>Recommendation</dt><dd>{tripCase.recommendationHeadline}</dd></div>
           <div><dt>Option set</dt><dd>{tripCase.optionSetSummary}</dd></div>
           <div><dt>Source</dt><dd>{tripCase.sourceEvidence}</dd></div>
@@ -156,6 +162,32 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
           <div><dt>Policy / disclosure</dt><dd>{tripCase.policyNotes}</dd></div>
           <div><dt>Approval ask</dt><dd>{tripCase.approvalPrompt}</dd></div>
           <div><dt>Internal notes</dt><dd>{tripCase.internalNotes}</dd></div>
+        </dl>
+      </article>
+
+      <article className="detailCard">
+        <span className="eyebrow">Audit event log</span>
+        <h3>Guarded coordination backbone</h3>
+        <p className="helperText">
+          Minimal server-side event chain for replaying who changed what state, under which request id.
+        </p>
+        <dl className="detailList">
+          {events.map((event) => (
+            <div key={event.eventId}>
+              <dt>
+                {event.action} · {event.createdAt}
+              </dt>
+              <dd>
+                request_id: {event.requestId}
+                <br />
+                actor: {event.actorType} · source: {event.source}
+                <br />
+                state: {event.beforeState} -&gt; {event.afterState}
+                <br />
+                {event.summary}
+              </dd>
+            </div>
+          ))}
         </dl>
       </article>
 

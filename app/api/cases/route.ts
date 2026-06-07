@@ -1,12 +1,26 @@
 import { NextResponse } from "next/server";
 import {
+  type AuditEvent,
   buildTripCaseFromIntake,
   getCaseById,
   mockCases,
   sanitizeCaseForPublicOps,
   type TripCaseIntakeInput
 } from "../../lib/ops";
-import { getCaseStoreMode, listStoredCases, saveCase } from "../../lib/case-store";
+import {
+  getCaseStoreMode,
+  listStoredCases,
+  saveAuditEvent,
+  saveCase
+} from "../../lib/case-store";
+
+function createRequestId() {
+  return `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function createEventId() {
+  return `evt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
 
 export async function GET() {
   const stored = await listStoredCases();
@@ -23,6 +37,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const requestId = createRequestId();
   const payload = (await request.json()) as Partial<TripCaseIntakeInput>;
   const tripCase = buildTripCaseFromIntake({
     company: payload.company ?? "",
@@ -38,6 +53,19 @@ export async function POST(request: Request) {
   });
 
   await saveCase(tripCase);
+  const createdEvent: AuditEvent = {
+    eventId: createEventId(),
+    tripCaseId: tripCase.tripCaseId,
+    requestId,
+    actorType: "requester",
+    action: "case_created",
+    beforeState: "none",
+    afterState: tripCase.state,
+    createdAt: new Date().toISOString(),
+    source: "public_intake_create",
+    summary: "Case created from intake and queued for guarded operator review."
+  };
+  await saveAuditEvent(createdEvent);
 
   return NextResponse.json({
     mode: getCaseStoreMode(),

@@ -10,6 +10,7 @@ export type Priority = "urgent" | "high" | "normal";
 
 export type TripCase = {
   id: string;
+  tripCaseId: string;
   company: string;
   officeName: string;
   requester: string;
@@ -34,6 +35,27 @@ export type TripCase = {
   isRedactedPublicView?: boolean;
 };
 
+export type AuditActorType = "requester" | "operator" | "system" | "public_demo";
+
+export type AuditEvent = {
+  eventId: string;
+  tripCaseId: string;
+  requestId: string;
+  actorType: AuditActorType;
+  action:
+    | "case_created"
+    | "approval_requested"
+    | "approval_hold"
+    | "approval_granted"
+    | "approval_returned"
+    | "protected_mutation_denied";
+  beforeState: CaseState | "none";
+  afterState: CaseState;
+  createdAt: string;
+  source: string;
+  summary: string;
+};
+
 export type TripCaseIntakeInput = {
   company: string;
   approvalOwner: string;
@@ -50,6 +72,7 @@ export type TripCaseIntakeInput = {
 export const mockCases: TripCase[] = [
   {
     id: "YC-2401",
+    tripCaseId: "YC-2401",
     company: "Willow Ventures",
     officeName: "Founder Office",
     requester: "Annie Li",
@@ -79,6 +102,7 @@ export const mockCases: TripCase[] = [
   },
   {
     id: "YC-2402",
+    tripCaseId: "YC-2402",
     company: "Northstar Capital",
     officeName: "Executive Assistant desk",
     requester: "Mina Park",
@@ -108,6 +132,7 @@ export const mockCases: TripCase[] = [
   },
   {
     id: "YC-2403",
+    tripCaseId: "YC-2403",
     company: "Aster Labs",
     officeName: "Office of the COO",
     requester: "Sara Lin",
@@ -153,6 +178,7 @@ export function getCaseById(id: string) {
 export function sanitizeCaseForPublicOps(input: TripCase): TripCase {
   return {
     ...input,
+    tripCaseId: input.tripCaseId,
     company: "Protected intake account",
     officeName: "Protected intake workflow",
     requester: "Protected requester",
@@ -188,6 +214,7 @@ export function buildTripCaseFromIntake(input: TripCaseIntakeInput): TripCase {
 
   return {
     id: `OPS-${stamp}`,
+    tripCaseId: `OPS-${stamp}`,
     company: input.company || "External intake",
     officeName: "Executive Assistant / Founder Office intake",
     requester: input.contact || "Reply contact pending",

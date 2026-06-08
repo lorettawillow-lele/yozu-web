@@ -4,8 +4,10 @@ import {
   canTransitionApprovalState,
   getApprovalTransitionGuardReason,
   getAuditActionForApprovalState,
+  getCurrentDisclosureState,
   getDefaultNextActionForPreflightStatus,
   getDefaultPreflightSummary,
+  getDisclosureStatement,
   getCaseById,
   getDefaultNextActionForApprovalState,
   getHandoffGuardReason,
@@ -87,6 +89,8 @@ export async function PATCH(
     preflightStatus?: PreflightStatus;
     preflightReasonCode?: PreflightReasonCode | null;
     preflightSummary?: string | null;
+    disclosureMarkShown?: boolean;
+    disclosureAcknowledge?: boolean;
   };
   const targetApprovalState = patch.approvalState ?? tripCase.approvalState;
   const targetPreflightStatus = patch.preflightStatus ?? tripCase.preflightStatus;
@@ -96,7 +100,11 @@ export async function PATCH(
   );
   const handoffPreflightGuardReason =
     targetApprovalState === "ready_for_handoff"
-      ? getHandoffGuardReason(tripCase.approvalState, tripCase.preflightStatus)
+      ? getHandoffGuardReason(
+          tripCase.approvalState,
+          tripCase.preflightStatus,
+          tripCase.disclosureAcknowledgedAt
+        )
       : null;
 
   if (
@@ -111,7 +119,11 @@ export async function PATCH(
       requestId,
       actorType: "public_demo",
       action:
-        targetApprovalState === "ready_for_handoff" && handoffPreflightGuardReason
+        targetApprovalState === "ready_for_handoff" &&
+        handoffPreflightGuardReason ===
+          "Disclosure must be acknowledged before the final handoff path is allowed."
+          ? "handoff_blocked_missing_disclosure_ack"
+          : targetApprovalState === "ready_for_handoff" && handoffPreflightGuardReason
           ? "preflight_handoff_denied"
           : targetApprovalState === "ready_for_handoff"
           ? "handoff_guard_denied"
@@ -168,6 +180,18 @@ export async function PATCH(
   }
 
   const nextState = getWorkflowStateFromApprovalState(targetApprovalState);
+  const disclosureShownAt =
+    patch.disclosureMarkShown && !tripCase.disclosureShownAt
+      ? new Date().toISOString()
+      : patch.disclosureMarkShown === false
+        ? null
+        : tripCase.disclosureShownAt;
+  const disclosureAcknowledgedAt =
+    patch.disclosureAcknowledge && !tripCase.disclosureAcknowledgedAt
+      ? new Date().toISOString()
+      : patch.disclosureAcknowledge === false
+        ? null
+        : tripCase.disclosureAcknowledgedAt;
   const nextCase = {
     ...tripCase,
     ...patch,
@@ -208,7 +232,10 @@ export async function PATCH(
     preflightCheckedAt:
       targetPreflightStatus && targetPreflightStatus !== tripCase.preflightStatus
         ? new Date().toISOString()
-        : patch.preflightCheckedAt ?? tripCase.preflightCheckedAt
+        : patch.preflightCheckedAt ?? tripCase.preflightCheckedAt,
+    disclosureShownAt,
+    disclosureAcknowledgedAt,
+    policyNotes: getDisclosureStatement(tripCase.disclosureMode)
   };
 
   if (
@@ -219,6 +246,42 @@ export async function PATCH(
   }
 
   await saveCase(nextCase);
+  const auditEvents: AuditEvent[] = [];
+
+  if (patch.disclosureMarkShown && !tripCase.disclosureShownAt && nextCase.disclosureShownAt) {
+    auditEvents.push({
+      eventId: createEventId(),
+      tripCaseId: nextCase.tripCaseId,
+      requestId,
+      actorType: "public_demo",
+      action: "disclosure_shown",
+      beforeState: "not_shown",
+      afterState: "shown",
+      createdAt: new Date().toISOString(),
+      source: "public_case_patch_disclosure",
+      summary: `Disclosure was shown for ${nextCase.disclosureMode} content. Current state: ${getCurrentDisclosureState(nextCase)}.`
+    });
+  }
+
+  if (
+    patch.disclosureAcknowledge &&
+    !tripCase.disclosureAcknowledgedAt &&
+    nextCase.disclosureAcknowledgedAt
+  ) {
+    auditEvents.push({
+      eventId: createEventId(),
+      tripCaseId: nextCase.tripCaseId,
+      requestId,
+      actorType: "public_demo",
+      action: "disclosure_acknowledged",
+      beforeState: tripCase.disclosureShownAt ? "shown" : "not_shown",
+      afterState: "acknowledged",
+      createdAt: new Date().toISOString(),
+      source: "public_case_patch_disclosure",
+      summary: `Disclosure was acknowledged for ${nextCase.disclosureMode} content before handoff.`
+    });
+  }
+
   const auditEvent: AuditEvent =
     targetPreflightStatus && targetPreflightStatus !== tripCase.preflightStatus
       ? {
@@ -247,7 +310,16 @@ export async function PATCH(
           source: "public_case_patch",
           summary: `Approval state moved from ${tripCase.approvalState} to ${targetApprovalState} on the public demo workflow.`
         };
-  await saveAuditEvent(auditEvent);
+  if (
+    targetPreflightStatus !== tripCase.preflightStatus ||
+    targetApprovalState !== tripCase.approvalState
+  ) {
+    auditEvents.push(auditEvent);
+  }
+
+  for (const event of auditEvents) {
+    await saveAuditEvent(event);
+  }
 
   return NextResponse.json({ case: nextCase, requestId });
 }

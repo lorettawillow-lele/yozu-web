@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ApprovalState, AuditEvent, PreflightReasonCode, PreflightStatus, TripCase } from "../../../lib/ops";
 import {
   approvalStateLabels,
+  disclosureModeLabels,
+  getCurrentDisclosureState,
+  getDisclosureStatement,
   getApprovalTransitionGuardReason,
   getHandoffGuardReason,
   getPreflightGuardReason,
@@ -23,6 +26,7 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+  const disclosureShownRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,6 +54,37 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
   const tripCase = useMemo(() => {
     return storedCase ?? seedCases.find((item) => item.id === caseId);
   }, [caseId, seedCases, storedCase]);
+
+  useEffect(() => {
+    if (!tripCase || tripCase.isRedactedPublicView || tripCase.disclosureShownAt || disclosureShownRef.current) {
+      return;
+    }
+
+    disclosureShownRef.current = true;
+
+    void (async () => {
+      const response = await fetch(`/api/cases/${caseId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          disclosureMarkShown: true
+        })
+      });
+
+      if (!response.ok) {
+        disclosureShownRef.current = false;
+        return;
+      }
+
+      const payload = (await response.json()) as { case?: TripCase };
+      if (payload.case) {
+        setStoredCase(payload.case);
+      }
+      await refreshEvents();
+    })();
+  }, [caseId, tripCase]);
 
   function appendInternalNote(currentNotes: string, nextNote: string) {
     const trimmedCurrent = currentNotes.trim();
@@ -168,6 +203,41 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
     };
     if (!response.ok) {
       setActionFeedback(payload.message ?? "Preflight update was rejected by the guard.");
+      await refreshEvents();
+      setIsUpdating(false);
+      return;
+    }
+
+    if (payload.case) {
+      setStoredCase(payload.case);
+    }
+    await refreshEvents();
+    setIsUpdating(false);
+  }
+
+  async function acknowledgeDisclosure() {
+    if (!tripCase || tripCase.isRedactedPublicView || tripCase.disclosureAcknowledgedAt) {
+      return;
+    }
+
+    setIsUpdating(true);
+    setActionFeedback(null);
+    const response = await fetch(`/api/cases/${caseId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        disclosureAcknowledge: true
+      })
+    });
+
+    const payload = (await response.json()) as {
+      case?: TripCase;
+      message?: string;
+    };
+    if (!response.ok) {
+      setActionFeedback(payload.message ?? "Disclosure acknowledgement was rejected.");
       await refreshEvents();
       setIsUpdating(false);
       return;
@@ -362,12 +432,93 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
           <div>
             <dt>Can handoff proceed?</dt>
             <dd>
-              {getHandoffGuardReason(tripCase.approvalState, tripCase.preflightStatus)
-                ? getHandoffGuardReason(tripCase.approvalState, tripCase.preflightStatus)
+              {getHandoffGuardReason(
+                tripCase.approvalState,
+                tripCase.preflightStatus,
+                tripCase.disclosureAcknowledgedAt
+              )
+                ? getHandoffGuardReason(
+                    tripCase.approvalState,
+                    tripCase.preflightStatus,
+                    tripCase.disclosureAcknowledgedAt
+                  )
                 : "Yes. The current approval and preflight status allow handoff."}
             </dd>
           </div>
         </dl>
+      </article>
+
+      <article className="detailCard detailCardWide">
+        <span className="eyebrow">Disclosure and evidence</span>
+        <h3>Make the trust boundary visible before any final handoff.</h3>
+        <p className="helperText">{getDisclosureStatement(tripCase.disclosureMode)}</p>
+        <dl className="detailList">
+          <div>
+            <dt>Source</dt>
+            <dd>
+              {disclosureModeLabels[tripCase.disclosureMode]}
+              <br />
+              {tripCase.sourceSummary}
+            </dd>
+          </div>
+          <div>
+            <dt>Fetched at</dt>
+            <dd>
+              {tripCase.fetchedAt}
+              <br />
+              {tripCase.freshnessSummary}
+            </dd>
+          </div>
+          <div>
+            <dt>Current state</dt>
+            <dd>{getCurrentDisclosureState(tripCase)}</dd>
+          </div>
+          <div>
+            <dt>Disclosure</dt>
+            <dd>{getDisclosureStatement(tripCase.disclosureMode)}</dd>
+          </div>
+          <div>
+            <dt>Disclosure shown</dt>
+            <dd>{tripCase.disclosureShownAt ?? "Not shown yet"}</dd>
+          </div>
+          <div>
+            <dt>Disclosure acknowledged</dt>
+            <dd>{tripCase.disclosureAcknowledgedAt ?? "Not acknowledged yet"}</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article className="detailCard detailCardCompact">
+        <span className="eyebrow">Disclosure acknowledgement</span>
+        <h3>Confirm the limits before final handoff.</h3>
+        {tripCase.isRedactedPublicView ? (
+          <p className="helperText">
+            Protected intake cases keep disclosure status visible, but public acknowledgement and handoff controls stay disabled.
+          </p>
+        ) : (
+          <>
+            <p className="helperText">
+              This acknowledgement makes it explicit that the case may still contain mock, demo, or operator-assembled content and still needs reconfirmation before real execution.
+            </p>
+            <div className="approvalActions">
+              <div className="approvalActionCard">
+                <button
+                  className={tripCase.disclosureAcknowledgedAt ? "secondaryButton" : "primaryButton"}
+                  type="button"
+                  disabled={isUpdating || Boolean(tripCase.disclosureAcknowledgedAt)}
+                  onClick={() => acknowledgeDisclosure()}
+                >
+                  {tripCase.disclosureAcknowledgedAt ? "Disclosure acknowledged" : "Acknowledge disclosure"}
+                </button>
+                <p className="actionHint">
+                  {tripCase.disclosureAcknowledgedAt
+                    ? `Recorded at ${tripCase.disclosureAcknowledgedAt}.`
+                    : "Required before the final handoff path can be unlocked."}
+                </p>
+              </div>
+            </div>
+          </>
+        )}
       </article>
 
       <article className="detailCard detailCardWide">
@@ -475,7 +626,11 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
               {approvalActions.map((action) => {
                 const disabledReason =
                   action.target === "ready_for_handoff"
-                    ? getHandoffGuardReason(tripCase.approvalState, tripCase.preflightStatus)
+                    ? getHandoffGuardReason(
+                        tripCase.approvalState,
+                        tripCase.preflightStatus,
+                        tripCase.disclosureAcknowledgedAt
+                      )
                     : getApprovalTransitionGuardReason(tripCase.approvalState, action.target);
 
                 return (

@@ -55,6 +55,11 @@ async function ensureSchema() {
       preflight_reason_code text,
       preflight_summary text,
       preflight_checked_at text,
+      disclosure_shown_at text,
+      disclosure_acknowledged_at text,
+      disclosure_mode text not null default 'operator_assembled',
+      source_summary text not null default '',
+      freshness_summary text not null default '',
       owner text not null,
       next_action text not null,
       option_set_summary text not null,
@@ -103,6 +108,26 @@ async function ensureSchema() {
   await sql`
     alter table case_core
     add column if not exists preflight_checked_at text
+  `;
+  await sql`
+    alter table case_core
+    add column if not exists disclosure_shown_at text
+  `;
+  await sql`
+    alter table case_core
+    add column if not exists disclosure_acknowledged_at text
+  `;
+  await sql`
+    alter table case_core
+    add column if not exists disclosure_mode text not null default 'operator_assembled'
+  `;
+  await sql`
+    alter table case_core
+    add column if not exists source_summary text not null default ''
+  `;
+  await sql`
+    alter table case_core
+    add column if not exists freshness_summary text not null default ''
   `;
   await sql`
     update case_core
@@ -154,6 +179,13 @@ function mapRowToCase(row: Record<string, unknown>): TripCase {
       : null,
     preflightSummary: row.preflight_summary ? String(row.preflight_summary) : null,
     preflightCheckedAt: row.preflight_checked_at ? String(row.preflight_checked_at) : null,
+    disclosureShownAt: row.disclosure_shown_at ? String(row.disclosure_shown_at) : null,
+    disclosureAcknowledgedAt: row.disclosure_acknowledged_at
+      ? String(row.disclosure_acknowledged_at)
+      : null,
+    disclosureMode: String(row.disclosure_mode) as TripCase["disclosureMode"],
+    sourceSummary: String(row.source_summary),
+    freshnessSummary: String(row.freshness_summary),
     owner: String(row.owner),
     nextAction: String(row.next_action),
     optionSetSummary: String(row.option_set_summary),
@@ -303,6 +335,11 @@ export async function saveCase(nextCase: TripCase) {
       preflight_reason_code,
       preflight_summary,
       preflight_checked_at,
+      disclosure_shown_at,
+      disclosure_acknowledged_at,
+      disclosure_mode,
+      source_summary,
+      freshness_summary,
       owner,
       next_action,
       option_set_summary,
@@ -335,6 +372,11 @@ export async function saveCase(nextCase: TripCase) {
       ${nextCase.preflightReasonCode},
       ${nextCase.preflightSummary},
       ${nextCase.preflightCheckedAt},
+      ${nextCase.disclosureShownAt},
+      ${nextCase.disclosureAcknowledgedAt},
+      ${nextCase.disclosureMode},
+      ${nextCase.sourceSummary},
+      ${nextCase.freshnessSummary},
       ${nextCase.owner},
       ${nextCase.nextAction},
       ${nextCase.optionSetSummary},
@@ -367,6 +409,11 @@ export async function saveCase(nextCase: TripCase) {
       preflight_reason_code = excluded.preflight_reason_code,
       preflight_summary = excluded.preflight_summary,
       preflight_checked_at = excluded.preflight_checked_at,
+      disclosure_shown_at = excluded.disclosure_shown_at,
+      disclosure_acknowledged_at = excluded.disclosure_acknowledged_at,
+      disclosure_mode = excluded.disclosure_mode,
+      source_summary = excluded.source_summary,
+      freshness_summary = excluded.freshness_summary,
       owner = excluded.owner,
       next_action = excluded.next_action,
       option_set_summary = excluded.option_set_summary,

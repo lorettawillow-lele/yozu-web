@@ -28,6 +28,8 @@ export type PreflightReasonCode =
   | "required_approval_missing"
   | "traveler_details_missing";
 
+export type DisclosureMode = "mock_demo" | "operator_assembled" | "live_fetched";
+
 export type Priority = "urgent" | "high" | "normal";
 
 export type TripCase = {
@@ -53,6 +55,11 @@ export type TripCase = {
   preflightReasonCode: PreflightReasonCode | null;
   preflightSummary: string | null;
   preflightCheckedAt: string | null;
+  disclosureShownAt: string | null;
+  disclosureAcknowledgedAt: string | null;
+  disclosureMode: DisclosureMode;
+  sourceSummary: string;
+  freshnessSummary: string;
   owner: string;
   nextAction: string;
   optionSetSummary: string;
@@ -86,11 +93,26 @@ export type AuditEvent = {
     | "preflight_reconfirm_required"
     | "preflight_guard_denied"
     | "preflight_handoff_denied"
+    | "disclosure_shown"
+    | "disclosure_acknowledged"
+    | "handoff_blocked_missing_disclosure_ack"
     | "handoff_guard_denied"
     | "approval_transition_denied"
     | "protected_mutation_denied";
-  beforeState: CaseState | ApprovalState | PreflightStatus | "none";
-  afterState: CaseState | ApprovalState | PreflightStatus;
+  beforeState:
+    | CaseState
+    | ApprovalState
+    | PreflightStatus
+    | "none"
+    | "not_shown"
+    | "shown"
+    | "acknowledged";
+  afterState:
+    | CaseState
+    | ApprovalState
+    | PreflightStatus
+    | "shown"
+    | "acknowledged";
   createdAt: string;
   source: string;
   summary: string;
@@ -138,6 +160,11 @@ export const mockCases: TripCase[] = [
     preflightReasonCode: null,
     preflightSummary: null,
     preflightCheckedAt: null,
+    disclosureShownAt: null,
+    disclosureAcknowledgedAt: null,
+    disclosureMode: "mock_demo",
+    sourceSummary: "Mock demo option set assembled for Founder Office workflow review.",
+    freshnessSummary: "Demo fixture only. Any real fare, inventory, or timing still needs reconfirmation before handoff.",
     owner: "Founder Office queue",
     nextAction: "Draft 2 decision-ready investor-trip options with disclosure notes.",
     optionSetSummary: "Balanced arrival plan vs tighter lower-cost multi-city route",
@@ -176,6 +203,11 @@ export const mockCases: TripCase[] = [
     preflightReasonCode: null,
     preflightSummary: null,
     preflightCheckedAt: null,
+    disclosureShownAt: null,
+    disclosureAcknowledgedAt: null,
+    disclosureMode: "operator_assembled",
+    sourceSummary: "Operator-assembled option summary for Executive Assistant workflow review.",
+    freshnessSummary: "Not live-fetched from suppliers. Timing, fare, and hotel availability may still change before handoff.",
     owner: "EA workflow queue",
     nextAction: "Hold coordination until the EA confirms option A or B with the approver.",
     optionSetSummary: "Executive-convenience route vs lower-cost split-city tradeoff",
@@ -214,6 +246,11 @@ export const mockCases: TripCase[] = [
     preflightReasonCode: null,
     preflightSummary: null,
     preflightCheckedAt: null,
+    disclosureShownAt: null,
+    disclosureAcknowledgedAt: null,
+    disclosureMode: "operator_assembled",
+    sourceSummary: "Operator triage placeholder before any live sourcing or room-block work begins.",
+    freshnessSummary: "No live evidence yet. Group-travel timing, inventory, and budget still need reconfirmation.",
     owner: "Ops triage",
     nextAction: "Assign operator and normalize the offsite request fields.",
     optionSetSummary: "Pending first pass for group travel options",
@@ -258,6 +295,12 @@ export const preflightReasonLabels: Record<PreflightReasonCode, string> = {
   policy_evidence_missing: "Policy evidence is missing",
   required_approval_missing: "Required approval evidence is missing",
   traveler_details_missing: "Required traveler or requester details are missing"
+};
+
+export const disclosureModeLabels: Record<DisclosureMode, string> = {
+  mock_demo: "Mock demo",
+  operator_assembled: "Operator-assembled",
+  live_fetched: "Fetched supplier data"
 };
 
 const allowedApprovalTransitions: Record<ApprovalState, ApprovalState[]> = {
@@ -396,7 +439,8 @@ export function getPreflightGuardReason(approvalState: ApprovalState) {
 
 export function getHandoffGuardReason(
   approvalState: ApprovalState,
-  preflightStatus: PreflightStatus | null
+  preflightStatus: PreflightStatus | null,
+  disclosureAcknowledgedAt: string | null
 ) {
   if (approvalState !== "approval_granted") {
     return "Explicit approval is required before handoff is allowed.";
@@ -414,7 +458,32 @@ export function getHandoffGuardReason(
     return "Preflight requires reconfirmation before handoff can continue.";
   }
 
+  if (!disclosureAcknowledgedAt) {
+    return "Disclosure must be acknowledged before the final handoff path is allowed.";
+  }
+
   return null;
+}
+
+export function getDisclosureStatement(mode: DisclosureMode) {
+  switch (mode) {
+    case "mock_demo":
+      return "This result includes mock or demo content. Prices, inventory, and timing still require reconfirmation before any real execution step.";
+    case "operator_assembled":
+      return "This result was operator-assembled. Supplier details may still change, and final execution still requires reconfirmation or operator handoff.";
+    case "live_fetched":
+      return "This result includes live-fetched supplier context, but price, inventory, and timing can still change before final execution.";
+    default:
+      return "This result may include mock, demo, or operator-assembled content. Final execution still requires reconfirmation.";
+  }
+}
+
+export function getCurrentDisclosureState(tripCase: TripCase) {
+  if (tripCase.preflightStatus === "blocked" || tripCase.preflightStatus === "reconfirm_required") {
+    return preflightStatusLabels[tripCase.preflightStatus];
+  }
+
+  return approvalStateLabels[tripCase.approvalState];
 }
 
 export function getAuditActionForApprovalState(approvalState: ApprovalState): AuditEvent["action"] {
@@ -482,6 +551,11 @@ export function sanitizeCaseForPublicOps(input: TripCase): TripCase {
     preflightReasonCode: input.preflightReasonCode,
     preflightSummary: "Protected preflight result hidden on the public demo surface.",
     preflightCheckedAt: input.preflightCheckedAt,
+    disclosureShownAt: input.disclosureShownAt,
+    disclosureAcknowledgedAt: input.disclosureAcknowledgedAt,
+    disclosureMode: input.disclosureMode,
+    sourceSummary: "Protected source summary hidden on the public demo surface.",
+    freshnessSummary: "Protected freshness and limits hidden on the public demo surface.",
     optionSetSummary: "Protected intake case; public surface only shows a redacted workflow placeholder.",
     sourceEvidence: "No public evidence is shown for protected intake cases.",
     fetchedAt: "Protected",
@@ -533,6 +607,11 @@ export function buildTripCaseFromIntake(input: TripCaseIntakeInput): TripCase {
     preflightReasonCode: null,
     preflightSummary: null,
     preflightCheckedAt: null,
+    disclosureShownAt: null,
+    disclosureAcknowledgedAt: null,
+    disclosureMode: "operator_assembled",
+    sourceSummary: "Operator-assembled intake summary. No live supplier fetch has happened yet.",
+    freshnessSummary: "Not live-fetched yet. Price, inventory, and timing still require reconfirmation before handoff.",
     owner: "Ops triage",
     nextAction: "Review intake and convert it into a decision-ready workflow case.",
     optionSetSummary: "Pending operator first pass",

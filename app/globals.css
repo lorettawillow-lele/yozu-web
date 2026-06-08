@@ -160,6 +160,10 @@ h2 {
   margin-bottom: 16px;
 }
 
+h2 span {
+  display: block;
+}
+
 h3 {
   font-size: 1.34rem;
   letter-spacing: -0.04em;

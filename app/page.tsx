@@ -78,7 +78,10 @@ export default function Home() {
       <section className="section">
         <div className="sectionIntro">
           <p className="eyebrow">Scope</p>
-          <h2>Small enough to launch, specific enough to be useful.</h2>
+          <h2>
+            <span>Small enough to launch,</span>
+            <span>specific enough to be useful.</span>
+          </h2>
         </div>
         <div className="launchGrid">
           {launchModules.map((item) => (

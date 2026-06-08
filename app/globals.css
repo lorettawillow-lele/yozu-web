@@ -507,6 +507,11 @@ li {
   color: var(--cream);
 }
 
+.detailCard.emphasisCard {
+  background: var(--deep);
+  border-color: rgba(255, 253, 245, 0.12);
+}
+
 .calloutCard p,
 .emphasisCard p,
 .emphasisCard h2,

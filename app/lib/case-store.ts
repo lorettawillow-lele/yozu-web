@@ -51,6 +51,10 @@ async function ensureSchema() {
       approval_requested_at text,
       approval_granted_at text,
       approval_blocked_reason text,
+      preflight_status text,
+      preflight_reason_code text,
+      preflight_summary text,
+      preflight_checked_at text,
       owner text not null,
       next_action text not null,
       option_set_summary text not null,
@@ -83,6 +87,22 @@ async function ensureSchema() {
   await sql`
     alter table case_core
     add column if not exists approval_blocked_reason text
+  `;
+  await sql`
+    alter table case_core
+    add column if not exists preflight_status text
+  `;
+  await sql`
+    alter table case_core
+    add column if not exists preflight_reason_code text
+  `;
+  await sql`
+    alter table case_core
+    add column if not exists preflight_summary text
+  `;
+  await sql`
+    alter table case_core
+    add column if not exists preflight_checked_at text
   `;
   await sql`
     update case_core
@@ -128,6 +148,12 @@ function mapRowToCase(row: Record<string, unknown>): TripCase {
     approvalRequestedAt: row.approval_requested_at ? String(row.approval_requested_at) : null,
     approvalGrantedAt: row.approval_granted_at ? String(row.approval_granted_at) : null,
     approvalBlockedReason: row.approval_blocked_reason ? String(row.approval_blocked_reason) : null,
+    preflightStatus: row.preflight_status ? (String(row.preflight_status) as TripCase["preflightStatus"]) : null,
+    preflightReasonCode: row.preflight_reason_code
+      ? (String(row.preflight_reason_code) as TripCase["preflightReasonCode"])
+      : null,
+    preflightSummary: row.preflight_summary ? String(row.preflight_summary) : null,
+    preflightCheckedAt: row.preflight_checked_at ? String(row.preflight_checked_at) : null,
     owner: String(row.owner),
     nextAction: String(row.next_action),
     optionSetSummary: String(row.option_set_summary),
@@ -273,6 +299,10 @@ export async function saveCase(nextCase: TripCase) {
       approval_requested_at,
       approval_granted_at,
       approval_blocked_reason,
+      preflight_status,
+      preflight_reason_code,
+      preflight_summary,
+      preflight_checked_at,
       owner,
       next_action,
       option_set_summary,
@@ -301,6 +331,10 @@ export async function saveCase(nextCase: TripCase) {
       ${nextCase.approvalRequestedAt},
       ${nextCase.approvalGrantedAt},
       ${nextCase.approvalBlockedReason},
+      ${nextCase.preflightStatus},
+      ${nextCase.preflightReasonCode},
+      ${nextCase.preflightSummary},
+      ${nextCase.preflightCheckedAt},
       ${nextCase.owner},
       ${nextCase.nextAction},
       ${nextCase.optionSetSummary},
@@ -329,6 +363,10 @@ export async function saveCase(nextCase: TripCase) {
       approval_requested_at = excluded.approval_requested_at,
       approval_granted_at = excluded.approval_granted_at,
       approval_blocked_reason = excluded.approval_blocked_reason,
+      preflight_status = excluded.preflight_status,
+      preflight_reason_code = excluded.preflight_reason_code,
+      preflight_summary = excluded.preflight_summary,
+      preflight_checked_at = excluded.preflight_checked_at,
       owner = excluded.owner,
       next_action = excluded.next_action,
       option_set_summary = excluded.option_set_summary,

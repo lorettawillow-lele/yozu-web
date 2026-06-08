@@ -337,7 +337,7 @@ h3 {
 .steps {
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   margin-top: 38px;
 }
 
@@ -529,6 +529,10 @@ li {
   letter-spacing: -0.06em;
   line-height: 0.95;
   margin-bottom: 18px;
+}
+
+.compactPublicTitle span {
+  display: block;
 }
 
 .compactPublicLead .pageTitle {
@@ -746,6 +750,14 @@ li {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.detailCardWide {
+  grid-column: 1 / -1;
+}
+
+.detailCardCompact {
+  align-self: stretch;
+}
+
 .statusCard {
   gap: 18px;
 }
@@ -889,6 +901,10 @@ li {
   .statusMetaGrid,
   .tableRow {
     grid-template-columns: 1fr;
+  }
+
+  .detailCardWide {
+    grid-column: auto;
   }
 
   .tableHeader {

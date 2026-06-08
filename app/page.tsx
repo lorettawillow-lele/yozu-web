@@ -10,10 +10,14 @@ export default function Home() {
         <div className="heroGrid landingGrid">
           <div className="heroCopy">
             <p className="eyebrow">AI Operating System for Enterprise Travel</p>
-            <h1 className="compactPublicTitle">Trustworthy travel execution starts before booking.</h1>
+            <h1 className="compactPublicTitle">
+              <span>Enterprise Travel.</span>
+              <span>From Request to Decision.</span>
+              <span>With Guardrails.</span>
+            </h1>
             <p className="lede">
-              {BRAND.productDisplayName} helps travelers move from messy intent to decision-ready,
-              source-backed options with approval, disclosure, and preflight before checkout
+              {BRAND.productDisplayName} helps teams move from travel request to decision-ready,
+              source-backed options with approval, disclosure, and preflight before operator
               coordination.
             </p>
             <div className="actions">
@@ -88,7 +92,7 @@ export default function Home() {
       <section className="section">
         <div className="sectionIntro">
           <p className="eyebrow">Core flow</p>
-          <h2>Intent to approval without pretending the trip is already booked.</h2>
+          <h2>Guarded workflow clarity before any real booking step.</h2>
         </div>
         <div className="steps">
           {coreFlow.map((step) => (

@@ -2,8 +2,16 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import type { ApprovalState, AuditEvent, TripCase } from "../../../lib/ops";
-import { approvalStateLabels, getApprovalTransitionGuardReason, stateLabels } from "../../../lib/ops";
+import type { ApprovalState, AuditEvent, PreflightReasonCode, PreflightStatus, TripCase } from "../../../lib/ops";
+import {
+  approvalStateLabels,
+  getApprovalTransitionGuardReason,
+  getHandoffGuardReason,
+  getPreflightGuardReason,
+  preflightReasonLabels,
+  preflightStatusLabels,
+  stateLabels
+} from "../../../lib/ops";
 
 type CaseDetailClientProps = {
   caseId: string;
@@ -121,6 +129,57 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
     setIsUpdating(false);
   }
 
+  async function updatePreflightAction(
+    nextPreflightStatus: PreflightStatus,
+    reasonCode: PreflightReasonCode | null,
+    note: string,
+    summary?: string
+  ) {
+    if (!tripCase || tripCase.isRedactedPublicView) {
+      return;
+    }
+
+    if (
+      tripCase.preflightStatus === nextPreflightStatus &&
+      tripCase.preflightReasonCode === reasonCode
+    ) {
+      return;
+    }
+
+    setIsUpdating(true);
+    setActionFeedback(null);
+    const response = await fetch(`/api/cases/${caseId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        preflightStatus: nextPreflightStatus,
+        preflightReasonCode: reasonCode,
+        preflightSummary: summary ?? null,
+        internalNotes: appendInternalNote(tripCase.internalNotes, note)
+      })
+    });
+
+    const payload = (await response.json()) as {
+      case?: TripCase;
+      requestId?: string;
+      message?: string;
+    };
+    if (!response.ok) {
+      setActionFeedback(payload.message ?? "Preflight update was rejected by the guard.");
+      await refreshEvents();
+      setIsUpdating(false);
+      return;
+    }
+
+    if (payload.case) {
+      setStoredCase(payload.case);
+    }
+    await refreshEvents();
+    setIsUpdating(false);
+  }
+
   const approvalActions = tripCase
     ? [
         {
@@ -171,6 +230,35 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
       })
     : [];
 
+  const preflightActions = tripCase
+    ? [
+        {
+          label: "Mark preflight pass",
+          target: "pass" as const,
+          reasonCode: null,
+          note: "Operator marked preflight as pass."
+        },
+        {
+          label: "Mark preflight warn",
+          target: "warn" as const,
+          reasonCode: "price_inventory_stale_risk" as const,
+          note: "Operator marked preflight as warn due to stale-risk review."
+        },
+        {
+          label: "Block preflight",
+          target: "blocked" as const,
+          reasonCode: "policy_evidence_missing" as const,
+          note: "Operator blocked preflight pending missing policy or evidence."
+        },
+        {
+          label: "Require reconfirmation",
+          target: "reconfirm_required" as const,
+          reasonCode: "source_freshness_stale" as const,
+          note: "Operator required reconfirmation because source freshness is stale."
+        }
+      ]
+    : [];
+
   if (!tripCase) {
     return (
       <section className="section opsSection">
@@ -191,7 +279,7 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
 
   return (
     <section className="section caseDetailGrid">
-      <article className="detailCard emphasisCard statusCard">
+      <article className="detailCard detailCardWide emphasisCard statusCard">
         <div className="statusHeader">
           <span className="eyebrow">Approval state</span>
           <h2 className="statusState">{approvalStateLabels[tripCase.approvalState]}</h2>
@@ -223,7 +311,7 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
         </div>
       </article>
 
-      <article className="detailCard">
+      <article className="detailCard detailCardCompact">
         <span className="eyebrow">Original request</span>
         <dl className="detailList">
           <div><dt>Company</dt><dd>{tripCase.company} · {tripCase.officeName}</dd></div>
@@ -235,7 +323,7 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
         </dl>
       </article>
 
-      <article className="detailCard">
+      <article className="detailCard detailCardCompact">
         <span className="eyebrow">Constraints</span>
         <ul className="bulletList tightList">
           {tripCase.constraints.map((item) => (
@@ -244,7 +332,7 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
         </ul>
       </article>
 
-      <article className="detailCard">
+      <article className="detailCard detailCardCompact">
         <span className="eyebrow">Approval checkpoint</span>
         <dl className="detailList">
           <div><dt>Approval state</dt><dd>{approvalStateLabels[tripCase.approvalState]}</dd></div>
@@ -254,7 +342,35 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
         </dl>
       </article>
 
-      <article className="detailCard">
+      <article className="detailCard detailCardCompact">
+        <span className="eyebrow">Preflight status</span>
+        <h3>{tripCase.preflightStatus ? preflightStatusLabels[tripCase.preflightStatus] : "Not run yet"}</h3>
+        <p className="helperText">
+          {tripCase.preflightSummary ??
+            "Preflight has not run yet. Handoff stays blocked until the case is fresh, complete, and approval-safe."}
+        </p>
+        <dl className="detailList">
+          <div>
+            <dt>Reason code</dt>
+            <dd>
+              {tripCase.preflightReasonCode
+                ? preflightReasonLabels[tripCase.preflightReasonCode]
+                : "No current preflight reason"}
+            </dd>
+          </div>
+          <div><dt>Checked at</dt><dd>{tripCase.preflightCheckedAt ?? "Not checked yet"}</dd></div>
+          <div>
+            <dt>Can handoff proceed?</dt>
+            <dd>
+              {getHandoffGuardReason(tripCase.approvalState, tripCase.preflightStatus)
+                ? getHandoffGuardReason(tripCase.approvalState, tripCase.preflightStatus)
+                : "Yes. The current approval and preflight status allow handoff."}
+            </dd>
+          </div>
+        </dl>
+      </article>
+
+      <article className="detailCard detailCardWide">
         <span className="eyebrow">Decision-ready output stub</span>
         <dl className="detailList">
           <div><dt>trip_case_id</dt><dd>{tripCase.tripCaseId}</dd></div>
@@ -268,7 +384,7 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
         </dl>
       </article>
 
-      <article className="detailCard">
+      <article className="detailCard detailCardWide">
         <span className="eyebrow">Audit event log</span>
         <h3>Guarded coordination backbone</h3>
         <p className="helperText">
@@ -294,7 +410,53 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
         </dl>
       </article>
 
-      <article className="detailCard">
+      <article className="detailCard detailCardCompact">
+        <span className="eyebrow">Preflight actions</span>
+        <h3>Run the validator and interrupt layer before handoff.</h3>
+        {tripCase.isRedactedPublicView ? (
+          <p className="helperText">
+            Preflight controls stay interactive on mock operator demo cases only. Real intake cases
+            remain protected on public routes.
+          </p>
+        ) : (
+          <>
+            <p className="helperText">
+              Preflight only runs after explicit approval. `blocked` and `reconfirm required` stop
+              handoff until the case is revalidated.
+            </p>
+            <div className="approvalActions">
+              {preflightActions.map((action) => {
+                const disabledReason = getPreflightGuardReason(tripCase.approvalState);
+                return (
+                  <div key={action.target} className="approvalActionCard">
+                    <button
+                      className={action.target === "pass" ? "primaryButton" : "secondaryButton"}
+                      type="button"
+                      disabled={isUpdating || Boolean(disabledReason)}
+                      onClick={() =>
+                        updatePreflightAction(
+                          action.target,
+                          action.reasonCode,
+                          action.note
+                        )
+                      }
+                    >
+                      {action.label}
+                    </button>
+                    <p className="actionHint">
+                      {disabledReason
+                        ? `Blocked: ${disabledReason}`
+                        : `Allowed: set preflight to ${preflightStatusLabels[action.target]}.`}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </article>
+
+      <article className="detailCard detailCardCompact">
         <span className="eyebrow">Approval-state actions</span>
         <h3>Move the case through the guarded approval checkpoint.</h3>
         {tripCase.isRedactedPublicView ? (
@@ -311,10 +473,10 @@ export function CaseDetailClient({ caseId, seedCases }: CaseDetailClientProps) {
             {actionFeedback ? <p className="guardFeedback">{actionFeedback}</p> : null}
             <div className="approvalActions">
               {approvalActions.map((action) => {
-                const disabledReason = getApprovalTransitionGuardReason(
-                  tripCase.approvalState,
-                  action.target
-                );
+                const disabledReason =
+                  action.target === "ready_for_handoff"
+                    ? getHandoffGuardReason(tripCase.approvalState, tripCase.preflightStatus)
+                    : getApprovalTransitionGuardReason(tripCase.approvalState, action.target);
 
                 return (
                   <div key={action.target} className="approvalActionCard">

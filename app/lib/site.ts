@@ -1,28 +1,33 @@
 export const coreFlow = [
   {
-    label: "Intent",
-    title: "Capture the trip outcome, not just dates",
-    body: "Yozu starts with timing, budget, people, constraints, and what would make the trip successful."
+    label: "01",
+    title: "Employee Request",
+    body: "Start with destination, timing, travelers, constraints, and the actual business outcome the trip needs to support."
   },
   {
-    label: "Decision-ready",
-    title: "Compress choices into 2-3 useful options",
-    body: "The traveler gets clear tradeoffs instead of another wall of search results."
+    label: "02",
+    title: "AI Planning",
+    body: "Turn messy travel intent into a smaller decision set instead of another wall of search results."
   },
   {
-    label: "Source + disclosure",
-    title: "Show supplier context before any next step",
-    body: "Each option is framed with provenance, freshness expectations, and policy/disclosure context."
+    label: "03",
+    title: "Policy Review",
+    body: "Frame each option with provenance, freshness expectations, and policy/disclosure context before it moves forward."
   },
   {
-    label: "Approval",
-    title: "Nothing advances without explicit approval",
-    body: "Yozu coordinates the next step only after the traveler confirms the intended option."
+    label: "04",
+    title: "Manager Approval",
+    body: "Nothing advances until the case crosses an explicit approval checkpoint and the intended option is confirmed."
   },
   {
-    label: "Preflight",
-    title: "Re-check before checkout coordination",
-    body: "Price, inventory, timing, and policy changes trigger a fresh review before any booking coordination step."
+    label: "05",
+    title: "Operator Coordination",
+    body: "Operators handle the guarded coordination step rather than pretending supplier execution already happened."
+  },
+  {
+    label: "06",
+    title: "Ready for Booking",
+    body: "Preflight makes the case decision-ready, while the public product still stops short of automatic booking."
   }
 ] as const;
 

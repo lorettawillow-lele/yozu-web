@@ -15,6 +15,19 @@ export type ApprovalState =
   | "returned_to_review"
   | "ready_for_handoff";
 
+export type PreflightStatus =
+  | "pass"
+  | "warn"
+  | "blocked"
+  | "reconfirm_required";
+
+export type PreflightReasonCode =
+  | "source_freshness_stale"
+  | "price_inventory_stale_risk"
+  | "policy_evidence_missing"
+  | "required_approval_missing"
+  | "traveler_details_missing";
+
 export type Priority = "urgent" | "high" | "normal";
 
 export type TripCase = {
@@ -36,6 +49,10 @@ export type TripCase = {
   approvalRequestedAt: string | null;
   approvalGrantedAt: string | null;
   approvalBlockedReason: string | null;
+  preflightStatus: PreflightStatus | null;
+  preflightReasonCode: PreflightReasonCode | null;
+  preflightSummary: string | null;
+  preflightCheckedAt: string | null;
   owner: string;
   nextAction: string;
   optionSetSummary: string;
@@ -63,11 +80,17 @@ export type AuditEvent = {
     | "approval_granted"
     | "approval_returned"
     | "ready_for_handoff"
+    | "preflight_passed"
+    | "preflight_warn"
+    | "preflight_blocked"
+    | "preflight_reconfirm_required"
+    | "preflight_guard_denied"
+    | "preflight_handoff_denied"
     | "handoff_guard_denied"
     | "approval_transition_denied"
     | "protected_mutation_denied";
-  beforeState: CaseState | ApprovalState | "none";
-  afterState: CaseState | ApprovalState;
+  beforeState: CaseState | ApprovalState | PreflightStatus | "none";
+  afterState: CaseState | ApprovalState | PreflightStatus;
   createdAt: string;
   source: string;
   summary: string;
@@ -111,6 +134,10 @@ export const mockCases: TripCase[] = [
     approvalRequestedAt: null,
     approvalGrantedAt: null,
     approvalBlockedReason: null,
+    preflightStatus: null,
+    preflightReasonCode: null,
+    preflightSummary: null,
+    preflightCheckedAt: null,
     owner: "Founder Office queue",
     nextAction: "Draft 2 decision-ready investor-trip options with disclosure notes.",
     optionSetSummary: "Balanced arrival plan vs tighter lower-cost multi-city route",
@@ -145,6 +172,10 @@ export const mockCases: TripCase[] = [
     approvalRequestedAt: "2026-06-06 06:42 PT",
     approvalGrantedAt: null,
     approvalBlockedReason: null,
+    preflightStatus: null,
+    preflightReasonCode: null,
+    preflightSummary: null,
+    preflightCheckedAt: null,
     owner: "EA workflow queue",
     nextAction: "Hold coordination until the EA confirms option A or B with the approver.",
     optionSetSummary: "Executive-convenience route vs lower-cost split-city tradeoff",
@@ -179,6 +210,10 @@ export const mockCases: TripCase[] = [
     approvalRequestedAt: null,
     approvalGrantedAt: null,
     approvalBlockedReason: null,
+    preflightStatus: null,
+    preflightReasonCode: null,
+    preflightSummary: null,
+    preflightCheckedAt: null,
     owner: "Ops triage",
     nextAction: "Assign operator and normalize the offsite request fields.",
     optionSetSummary: "Pending first pass for group travel options",
@@ -208,6 +243,21 @@ export const approvalStateLabels: Record<ApprovalState, string> = {
   approval_granted: "Approval granted",
   returned_to_review: "Returned to review",
   ready_for_handoff: "Ready for handoff"
+};
+
+export const preflightStatusLabels: Record<PreflightStatus, string> = {
+  pass: "Pass",
+  warn: "Warn",
+  blocked: "Blocked",
+  reconfirm_required: "Reconfirm required"
+};
+
+export const preflightReasonLabels: Record<PreflightReasonCode, string> = {
+  source_freshness_stale: "Source freshness is stale",
+  price_inventory_stale_risk: "Price or inventory may be stale",
+  policy_evidence_missing: "Policy evidence is missing",
+  required_approval_missing: "Required approval evidence is missing",
+  traveler_details_missing: "Required traveler or requester details are missing"
 };
 
 const allowedApprovalTransitions: Record<ApprovalState, ApprovalState[]> = {
@@ -280,6 +330,93 @@ export function getDefaultNextActionForApprovalState(approvalState: ApprovalStat
   }
 }
 
+export function getDefaultPreflightSummary(
+  status: PreflightStatus,
+  reasonCode: PreflightReasonCode | null
+) {
+  if (status === "pass") {
+    return "Preflight passed. Case can move toward coordination handoff.";
+  }
+
+  if (status === "warn") {
+    return "Preflight found a warning. Operator can proceed, but should acknowledge the risk.";
+  }
+
+  if (reasonCode) {
+    return preflightReasonLabels[reasonCode];
+  }
+
+  if (status === "blocked") {
+    return "Preflight blocked the handoff until the operator resolves the issue.";
+  }
+
+  return "Preflight requires reconfirmation before handoff can continue.";
+}
+
+export function getDefaultNextActionForPreflightStatus(
+  status: PreflightStatus,
+  reasonCode: PreflightReasonCode | null
+) {
+  switch (status) {
+    case "pass":
+      return "Preflight passed; handoff can proceed when the operator is ready.";
+    case "warn":
+      return "Preflight returned a warning; operator should review the risk before handoff.";
+    case "blocked":
+      return `Preflight blocked handoff${reasonCode ? `: ${preflightReasonLabels[reasonCode]}` : ""}.`;
+    case "reconfirm_required":
+      return `Preflight requires reconfirmation${reasonCode ? `: ${preflightReasonLabels[reasonCode]}` : ""}.`;
+    default:
+      return "Preflight result pending.";
+  }
+}
+
+export function getPreflightAuditAction(status: PreflightStatus): AuditEvent["action"] {
+  switch (status) {
+    case "pass":
+      return "preflight_passed";
+    case "warn":
+      return "preflight_warn";
+    case "blocked":
+      return "preflight_blocked";
+    case "reconfirm_required":
+      return "preflight_reconfirm_required";
+    default:
+      return "preflight_blocked";
+  }
+}
+
+export function getPreflightGuardReason(approvalState: ApprovalState) {
+  if (approvalState !== "approval_granted" && approvalState !== "ready_for_handoff") {
+    return "Preflight can only run after explicit approval is granted.";
+  }
+
+  return null;
+}
+
+export function getHandoffGuardReason(
+  approvalState: ApprovalState,
+  preflightStatus: PreflightStatus | null
+) {
+  if (approvalState !== "approval_granted") {
+    return "Explicit approval is required before handoff is allowed.";
+  }
+
+  if (!preflightStatus) {
+    return "Preflight must run before coordination handoff is allowed.";
+  }
+
+  if (preflightStatus === "blocked") {
+    return "Preflight blocked the handoff. Resolve the blocker before continuing.";
+  }
+
+  if (preflightStatus === "reconfirm_required") {
+    return "Preflight requires reconfirmation before handoff can continue.";
+  }
+
+  return null;
+}
+
 export function getAuditActionForApprovalState(approvalState: ApprovalState): AuditEvent["action"] {
   switch (approvalState) {
     case "options_prepared":
@@ -340,7 +477,11 @@ export function sanitizeCaseForPublicOps(input: TripCase): TripCase {
     nextAction: "Internal operator follow-up continues in the protected workflow surface.",
     approvalRequestedAt: input.approvalRequestedAt,
     approvalGrantedAt: input.approvalGrantedAt,
-    approvalBlockedReason: input.approvalBlockedReason,
+    approvalBlockedReason: "Protected approval block reason hidden on the public demo surface.",
+    preflightStatus: input.preflightStatus,
+    preflightReasonCode: input.preflightReasonCode,
+    preflightSummary: "Protected preflight result hidden on the public demo surface.",
+    preflightCheckedAt: input.preflightCheckedAt,
     optionSetSummary: "Protected intake case; public surface only shows a redacted workflow placeholder.",
     sourceEvidence: "No public evidence is shown for protected intake cases.",
     fetchedAt: "Protected",
@@ -388,6 +529,10 @@ export function buildTripCaseFromIntake(input: TripCaseIntakeInput): TripCase {
     approvalRequestedAt: null,
     approvalGrantedAt: null,
     approvalBlockedReason: null,
+    preflightStatus: null,
+    preflightReasonCode: null,
+    preflightSummary: null,
+    preflightCheckedAt: null,
     owner: "Ops triage",
     nextAction: "Review intake and convert it into a decision-ready workflow case.",
     optionSetSummary: "Pending operator first pass",

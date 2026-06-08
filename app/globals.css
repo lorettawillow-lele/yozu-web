@@ -345,6 +345,10 @@ h3 {
   margin-top: 38px;
 }
 
+.enterpriseWorkflow {
+  gap: 18px;
+}
+
 .demoSteps {
   margin-top: 0;
 }
@@ -352,6 +356,7 @@ h3 {
 .step {
   min-height: 250px;
   padding: 22px;
+  position: relative;
 }
 
 .step span {
@@ -360,8 +365,29 @@ h3 {
   font-family: ui-sans-serif, system-ui, sans-serif;
   font-size: 0.78rem;
   font-weight: 900;
-  margin-bottom: 26px;
+  margin-bottom: 18px;
   text-transform: uppercase;
+}
+
+.enterpriseWorkflow .step::after {
+  background: linear-gradient(90deg, rgba(47, 109, 79, 0.26), rgba(47, 109, 79, 0));
+  content: "";
+  height: 1px;
+  position: absolute;
+  right: -14px;
+  top: 36px;
+  width: 28px;
+}
+
+.enterpriseWorkflow .step:nth-child(3),
+.enterpriseWorkflow .step:nth-child(4),
+.enterpriseWorkflow .step:nth-child(5) {
+  border-color: rgba(47, 109, 79, 0.22);
+  box-shadow: 0 24px 80px rgba(16, 37, 27, 0.12), inset 0 0 0 1px rgba(47, 109, 79, 0.06);
+}
+
+.enterpriseWorkflow .step:last-child::after {
+  display: none;
 }
 
 .step p,
@@ -531,12 +557,32 @@ li {
 .compactPublicTitle {
   font-size: clamp(2.45rem, 5vw, 5rem);
   letter-spacing: -0.06em;
-  line-height: 0.95;
-  margin-bottom: 18px;
+  line-height: 0.91;
+  margin-bottom: 22px;
 }
 
 .compactPublicTitle span {
   display: block;
+}
+
+.heroLineIntro {
+  color: var(--muted);
+  font-size: clamp(1.7rem, 3vw, 2.7rem);
+  letter-spacing: -0.05em;
+  margin-bottom: 0.18em;
+}
+
+.heroLineFocus {
+  color: var(--deep);
+  font-size: clamp(2.65rem, 5.8vw, 5.6rem);
+  letter-spacing: -0.075em;
+}
+
+.heroLineGuardrail {
+  color: var(--leaf);
+  font-size: clamp(2rem, 4.2vw, 3.6rem);
+  letter-spacing: -0.06em;
+  margin-top: 0.08em;
 }
 
 .compactPublicLead .pageTitle {
@@ -763,12 +809,13 @@ li {
 }
 
 .statusCard {
-  gap: 18px;
+  gap: 22px;
+  padding: 28px 28px 30px;
 }
 
 .statusHeader {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .statusState {
@@ -782,7 +829,7 @@ li {
   font-size: 1.02rem;
   line-height: 1.55;
   margin: 0;
-  max-width: 34ch;
+  max-width: 42ch;
 }
 
 .protectedNotice {
@@ -795,7 +842,7 @@ li {
 
 .statusMetaGrid {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
@@ -826,13 +873,13 @@ li {
 
 .detailList {
   display: grid;
-  gap: 14px;
+  gap: 16px;
   margin: 0;
 }
 
 .detailList div {
   border-top: 1px solid var(--line);
-  padding-top: 12px;
+  padding-top: 14px;
 }
 
 .detailList div:first-child {
@@ -857,13 +904,17 @@ li {
 
 .approvalActions {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   margin-top: 18px;
 }
 
 .approvalActionCard {
   display: grid;
-  gap: 8px;
+  gap: 10px;
+  background: rgba(255, 253, 245, 0.62);
+  border: 1px solid rgba(23, 32, 24, 0.08);
+  border-radius: 22px;
+  padding: 14px 16px;
 }
 
 .approvalActions .primaryButton,
@@ -895,6 +946,13 @@ li {
     line-height: 0.98;
   }
 
+  .heroLineIntro,
+  .heroLineFocus,
+  .heroLineGuardrail {
+    font-size: inherit;
+    margin: 0;
+  }
+
   .compactLead .pageTitle {
     font-size: clamp(2rem, 9vw, 3.4rem);
   }
@@ -909,6 +967,10 @@ li {
 
   .detailCardWide {
     grid-column: auto;
+  }
+
+  .enterpriseWorkflow .step::after {
+    display: none;
   }
 
   .tableHeader {

@@ -4,6 +4,14 @@ import type { AuditEvent, TripCase } from "./ops";
 const memoryCases = new Map<string, TripCase>();
 const memoryEvents = new Map<string, AuditEvent[]>();
 
+function textOrFallback(value: unknown, fallback: string) {
+  if (value === null || value === undefined || value === "") {
+    return fallback;
+  }
+
+  return String(value);
+}
+
 function hasPostgres() {
   return Boolean(process.env.POSTGRES_URL);
 }
@@ -153,20 +161,20 @@ async function ensureSchema() {
 
 function mapRowToCase(row: Record<string, unknown>): TripCase {
   return {
-    id: String(row.id),
-    tripCaseId: String(row.trip_case_id || row.id),
-    company: String(row.company),
-    officeName: String(row.office_name),
-    requester: String(row.requester),
-    traveler: String(row.traveler),
-    approver: String(row.approver),
-    tripPurpose: String(row.trip_purpose),
-    destination: String(row.destination),
-    timing: String(row.timing),
+    id: textOrFallback(row.id, "UNKNOWN"),
+    tripCaseId: textOrFallback(row.trip_case_id || row.id, textOrFallback(row.id, "UNKNOWN")),
+    company: textOrFallback(row.company, "Unknown account"),
+    officeName: textOrFallback(row.office_name, "Unknown office"),
+    requester: textOrFallback(row.requester, "Unknown requester"),
+    traveler: textOrFallback(row.traveler, "Unknown traveler"),
+    approver: textOrFallback(row.approver, "Unknown approver"),
+    tripPurpose: textOrFallback(row.trip_purpose, "Unknown trip purpose"),
+    destination: textOrFallback(row.destination, "Unknown destination"),
+    timing: textOrFallback(row.timing, "Unknown timing"),
     constraints: Array.isArray(row.constraints)
       ? row.constraints.map((item) => String(item))
       : [],
-    approvalContext: String(row.approval_context),
+    approvalContext: textOrFallback(row.approval_context, "Approval context unavailable."),
     priority: row.priority as TripCase["priority"],
     state: row.state as TripCase["state"],
     approvalState: row.approval_state as TripCase["approvalState"],
@@ -186,15 +194,18 @@ function mapRowToCase(row: Record<string, unknown>): TripCase {
     disclosureMode: String(row.disclosure_mode) as TripCase["disclosureMode"],
     sourceSummary: String(row.source_summary),
     freshnessSummary: String(row.freshness_summary),
-    owner: String(row.owner),
-    nextAction: String(row.next_action),
-    optionSetSummary: String(row.option_set_summary),
-    sourceEvidence: String(row.source_evidence),
-    fetchedAt: String(row.fetched_at),
-    policyNotes: String(row.policy_notes),
-    internalNotes: String(row.internal_notes),
-    recommendationHeadline: String(row.recommendation_headline),
-    approvalPrompt: String(row.approval_prompt)
+    owner: textOrFallback(row.owner, "Unknown owner"),
+    nextAction: textOrFallback(row.next_action, "Next action unavailable."),
+    optionSetSummary: textOrFallback(row.option_set_summary, "Option summary unavailable."),
+    sourceEvidence: textOrFallback(row.source_evidence, "Source evidence unavailable."),
+    fetchedAt: textOrFallback(row.fetched_at, "Not available"),
+    policyNotes: textOrFallback(row.policy_notes, "Policy notes unavailable."),
+    internalNotes: textOrFallback(row.internal_notes, "Internal notes unavailable."),
+    recommendationHeadline: textOrFallback(
+      row.recommendation_headline,
+      "Recommendation headline unavailable."
+    ),
+    approvalPrompt: textOrFallback(row.approval_prompt, "Approval prompt unavailable.")
   };
 }
 
@@ -226,7 +237,16 @@ export async function listStoredCases() {
     order by created_at desc
   `;
 
-  return rows.map((row) => mapRowToCase(row));
+  const cases: TripCase[] = [];
+  for (const row of rows) {
+    try {
+      cases.push(mapRowToCase(row));
+    } catch (error) {
+      console.error("listStoredCases: failed to map stored row", error, row);
+    }
+  }
+
+  return cases;
 }
 
 export async function getStoredCase(id: string) {

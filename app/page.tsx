@@ -11,9 +11,9 @@ export default function Home() {
           <div className="heroCopy">
             <p className="eyebrow">AI Operating System for Enterprise Travel</p>
             <h1 className="compactPublicTitle">
-              <span>Enterprise Travel.</span>
-              <span>From Request to Decision.</span>
-              <span>With Guardrails.</span>
+              <span className="heroLine heroLineIntro">Enterprise Travel.</span>
+              <span className="heroLine heroLineFocus">From Request to Decision.</span>
+              <span className="heroLine heroLineGuardrail">With Guardrails.</span>
             </h1>
             <p className="lede">
               {BRAND.productDisplayName} helps teams move from travel request to decision-ready,
@@ -97,7 +97,7 @@ export default function Home() {
           <p className="eyebrow">Core flow</p>
           <h2>Guarded workflow clarity before any real booking step.</h2>
         </div>
-        <div className="steps">
+        <div className="steps enterpriseWorkflow">
           {coreFlow.map((step) => (
             <article className="step" key={step.label}>
               <span>{step.label}</span>

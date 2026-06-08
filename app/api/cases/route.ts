@@ -23,17 +23,27 @@ function createEventId() {
 }
 
 export async function GET() {
-  const stored = await listStoredCases();
-  const storedById = new Map(stored.map((item) => [item.id, item]));
-  const visibleStored = stored
-    .filter((item) => !getCaseById(item.id))
-    .map((item) => sanitizeCaseForPublicOps(item));
-  const mergedMockCases = mockCases.map((item) => storedById.get(item.id) ?? item);
+  try {
+    const stored = await listStoredCases();
+    const safeStored = stored.filter((item) => item && item.id);
+    const storedById = new Map(safeStored.map((item) => [item.id, item]));
+    const visibleStored = safeStored
+      .filter((item) => !getCaseById(item.id))
+      .map((item) => sanitizeCaseForPublicOps(item));
+    const mergedMockCases = mockCases.map((item) => storedById.get(item.id) ?? item);
 
-  return NextResponse.json({
-    mode: getCaseStoreMode(),
-    cases: [...visibleStored, ...mergedMockCases]
-  });
+    return NextResponse.json({
+      mode: getCaseStoreMode(),
+      cases: [...visibleStored, ...mergedMockCases]
+    });
+  } catch (error) {
+    console.error("GET /api/cases failed; returning degraded mock-only fallback", error);
+
+    return NextResponse.json({
+      mode: `${getCaseStoreMode()}-degraded`,
+      cases: mockCases
+    });
+  }
 }
 
 export async function POST(request: Request) {

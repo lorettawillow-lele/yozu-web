@@ -47,6 +47,10 @@ async function ensureSchema() {
       approval_context text not null,
       priority text not null,
       state text not null,
+      approval_state text not null default 'draft_review',
+      approval_requested_at text,
+      approval_granted_at text,
+      approval_blocked_reason text,
       owner text not null,
       next_action text not null,
       option_set_summary text not null,
@@ -63,6 +67,22 @@ async function ensureSchema() {
   await sql`
     alter table case_core
     add column if not exists trip_case_id text not null default ''
+  `;
+  await sql`
+    alter table case_core
+    add column if not exists approval_state text not null default 'draft_review'
+  `;
+  await sql`
+    alter table case_core
+    add column if not exists approval_requested_at text
+  `;
+  await sql`
+    alter table case_core
+    add column if not exists approval_granted_at text
+  `;
+  await sql`
+    alter table case_core
+    add column if not exists approval_blocked_reason text
   `;
   await sql`
     update case_core
@@ -104,6 +124,10 @@ function mapRowToCase(row: Record<string, unknown>): TripCase {
     approvalContext: String(row.approval_context),
     priority: row.priority as TripCase["priority"],
     state: row.state as TripCase["state"],
+    approvalState: row.approval_state as TripCase["approvalState"],
+    approvalRequestedAt: row.approval_requested_at ? String(row.approval_requested_at) : null,
+    approvalGrantedAt: row.approval_granted_at ? String(row.approval_granted_at) : null,
+    approvalBlockedReason: row.approval_blocked_reason ? String(row.approval_blocked_reason) : null,
     owner: String(row.owner),
     nextAction: String(row.next_action),
     optionSetSummary: String(row.option_set_summary),
@@ -245,6 +269,10 @@ export async function saveCase(nextCase: TripCase) {
       approval_context,
       priority,
       state,
+      approval_state,
+      approval_requested_at,
+      approval_granted_at,
+      approval_blocked_reason,
       owner,
       next_action,
       option_set_summary,
@@ -269,6 +297,10 @@ export async function saveCase(nextCase: TripCase) {
       ${nextCase.approvalContext},
       ${nextCase.priority},
       ${nextCase.state},
+      ${nextCase.approvalState},
+      ${nextCase.approvalRequestedAt},
+      ${nextCase.approvalGrantedAt},
+      ${nextCase.approvalBlockedReason},
       ${nextCase.owner},
       ${nextCase.nextAction},
       ${nextCase.optionSetSummary},
@@ -293,6 +325,10 @@ export async function saveCase(nextCase: TripCase) {
       approval_context = excluded.approval_context,
       priority = excluded.priority,
       state = excluded.state,
+      approval_state = excluded.approval_state,
+      approval_requested_at = excluded.approval_requested_at,
+      approval_granted_at = excluded.approval_granted_at,
+      approval_blocked_reason = excluded.approval_blocked_reason,
       owner = excluded.owner,
       next_action = excluded.next_action,
       option_set_summary = excluded.option_set_summary,

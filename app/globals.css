@@ -482,6 +482,7 @@ li {
 .emphasisCard h2,
 .emphasisCard .eyebrow,
 .emphasisCard li,
+.emphasisCard .statusMetaValue,
 .siteFooter strong,
 .siteFooter a,
 .footerMeta span {
@@ -739,9 +740,72 @@ li {
 }
 
 .caseDetailGrid {
+  align-items: start;
   display: grid;
   gap: 18px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.statusCard {
+  gap: 18px;
+}
+
+.statusHeader {
+  display: grid;
+  gap: 10px;
+}
+
+.statusState {
+  font-size: clamp(2rem, 3.2vw, 3.15rem);
+  letter-spacing: -0.06em;
+  line-height: 0.94;
+  margin: 0;
+}
+
+.statusAction {
+  font-size: 1.02rem;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 34ch;
+}
+
+.protectedNotice {
+  background: rgba(255, 253, 245, 0.08);
+  border: 1px solid rgba(255, 253, 245, 0.14);
+  border-radius: 20px;
+  margin: 0;
+  padding: 14px 16px;
+}
+
+.statusMetaGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.statusMetaItem {
+  background: rgba(255, 253, 245, 0.08);
+  border: 1px solid rgba(255, 253, 245, 0.12);
+  border-radius: 20px;
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+}
+
+.statusMetaLabel {
+  color: rgba(255, 253, 245, 0.7);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.statusMetaValue {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.45;
 }
 
 .detailList {
@@ -781,9 +845,31 @@ li {
   margin-top: 18px;
 }
 
+.approvalActionCard {
+  display: grid;
+  gap: 8px;
+}
+
 .approvalActions .primaryButton,
 .approvalActions .secondaryButton {
   width: 100%;
+}
+
+.actionHint,
+.guardFeedback {
+  color: var(--muted);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.guardFeedback {
+  background: rgba(244, 203, 86, 0.16);
+  border: 1px solid rgba(119, 83, 0, 0.14);
+  border-radius: 18px;
+  color: #6c5100;
+  padding: 12px 14px;
 }
 
 @media (max-width: 920px) {
@@ -800,6 +886,7 @@ li {
   .opsSummaryGrid,
   .useCaseGrid,
   .caseDetailGrid,
+  .statusMetaGrid,
   .tableRow {
     grid-template-columns: 1fr;
   }

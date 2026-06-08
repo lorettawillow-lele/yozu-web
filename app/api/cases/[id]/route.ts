@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
 import { getStoredCase, listAuditEvents, saveAuditEvent, saveCase } from "../../../lib/case-store";
-import { getCaseById, sanitizeCaseForPublicOps, type AuditEvent } from "../../../lib/ops";
+import {
+  canTransitionApprovalState,
+  getApprovalTransitionGuardReason,
+  getAuditActionForApprovalState,
+  getCaseById,
+  getDefaultNextActionForApprovalState,
+  getWorkflowStateFromApprovalState,
+  sanitizeCaseForPublicOps,
+  type AuditEvent,
+  type ApprovalState
+} from "../../../lib/ops";
 
 function createRequestId() {
   return `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -8,21 +18,6 @@ function createRequestId() {
 
 function createEventId() {
   return `evt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-}
-
-function mapAction(nextState: NonNullable<AuditEvent["afterState"]>) {
-  switch (nextState) {
-    case "options_sent":
-      return "approval_requested" as const;
-    case "awaiting_approval":
-      return "approval_hold" as const;
-    case "coordinating":
-      return "approval_granted" as const;
-    case "reviewing":
-      return "approval_returned" as const;
-    default:
-      return "approval_requested" as const;
-  }
 }
 
 export async function GET(
@@ -80,10 +75,68 @@ export async function PATCH(
     );
   }
 
-  const patch = (await request.json()) as Partial<typeof tripCase>;
+  const patch = (await request.json()) as Partial<typeof tripCase> & {
+    approvalState?: ApprovalState;
+  };
+  const targetApprovalState = patch.approvalState ?? tripCase.approvalState;
+  const transitionGuardReason = getApprovalTransitionGuardReason(
+    tripCase.approvalState,
+    targetApprovalState
+  );
+
+  if (
+    targetApprovalState !== tripCase.approvalState &&
+    (!canTransitionApprovalState(tripCase.approvalState, targetApprovalState) || transitionGuardReason)
+  ) {
+    const deniedEvent: AuditEvent = {
+      eventId: createEventId(),
+      tripCaseId: tripCase.tripCaseId,
+      requestId,
+      actorType: "public_demo",
+      action:
+        targetApprovalState === "ready_for_handoff"
+          ? "handoff_guard_denied"
+          : "approval_transition_denied",
+      beforeState: tripCase.approvalState,
+      afterState: targetApprovalState,
+      createdAt: new Date().toISOString(),
+      source: "public_case_patch_guard",
+      summary:
+        transitionGuardReason ??
+        `Transition from ${tripCase.approvalState} to ${targetApprovalState} was rejected.`
+    };
+    await saveAuditEvent(deniedEvent);
+
+    return NextResponse.json(
+      {
+        error: "transition_denied",
+        message: transitionGuardReason ?? "This approval-state transition is not allowed."
+      },
+      { status: 400 }
+    );
+  }
+
+  const nextState = getWorkflowStateFromApprovalState(targetApprovalState);
   const nextCase = {
     ...tripCase,
-    ...patch
+    ...patch,
+    state: nextState,
+    approvalState: targetApprovalState,
+    nextAction: patch.nextAction ?? getDefaultNextActionForApprovalState(targetApprovalState),
+    approvalRequestedAt:
+      targetApprovalState === "approval_requested"
+        ? tripCase.approvalRequestedAt ?? new Date().toISOString()
+        : patch.approvalRequestedAt ?? tripCase.approvalRequestedAt,
+    approvalGrantedAt:
+      targetApprovalState === "approval_granted"
+        ? patch.approvalGrantedAt ?? new Date().toISOString()
+        : targetApprovalState === "ready_for_handoff"
+          ? patch.approvalGrantedAt ?? tripCase.approvalGrantedAt
+          : patch.approvalGrantedAt ?? null,
+    approvalBlockedReason:
+      targetApprovalState === "approval_blocked"
+        ? patch.approvalBlockedReason ?? "Approval path blocked until operator resolves the issue."
+        : patch.approvalBlockedReason ?? null
   };
 
   await saveCase(nextCase);
@@ -92,12 +145,12 @@ export async function PATCH(
     tripCaseId: nextCase.tripCaseId,
     requestId,
     actorType: "public_demo",
-    action: mapAction(nextCase.state),
-    beforeState: tripCase.state,
-    afterState: nextCase.state,
+    action: getAuditActionForApprovalState(targetApprovalState),
+    beforeState: tripCase.approvalState,
+    afterState: targetApprovalState,
     createdAt: new Date().toISOString(),
     source: "public_case_patch",
-    summary: `Case moved from ${tripCase.state} to ${nextCase.state} on the public demo workflow.`
+    summary: `Approval state moved from ${tripCase.approvalState} to ${targetApprovalState} on the public demo workflow.`
   };
   await saveAuditEvent(auditEvent);
 

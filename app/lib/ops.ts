@@ -6,6 +6,15 @@ export type CaseState =
   | "coordinating"
   | "closed";
 
+export type ApprovalState =
+  | "draft_review"
+  | "options_prepared"
+  | "approval_requested"
+  | "approval_blocked"
+  | "approval_granted"
+  | "returned_to_review"
+  | "ready_for_handoff";
+
 export type Priority = "urgent" | "high" | "normal";
 
 export type TripCase = {
@@ -23,6 +32,10 @@ export type TripCase = {
   approvalContext: string;
   priority: Priority;
   state: CaseState;
+  approvalState: ApprovalState;
+  approvalRequestedAt: string | null;
+  approvalGrantedAt: string | null;
+  approvalBlockedReason: string | null;
   owner: string;
   nextAction: string;
   optionSetSummary: string;
@@ -44,13 +57,17 @@ export type AuditEvent = {
   actorType: AuditActorType;
   action:
     | "case_created"
+    | "options_prepared"
     | "approval_requested"
-    | "approval_hold"
+    | "approval_blocked"
     | "approval_granted"
     | "approval_returned"
+    | "ready_for_handoff"
+    | "handoff_guard_denied"
+    | "approval_transition_denied"
     | "protected_mutation_denied";
-  beforeState: CaseState | "none";
-  afterState: CaseState;
+  beforeState: CaseState | ApprovalState | "none";
+  afterState: CaseState | ApprovalState;
   createdAt: string;
   source: string;
   summary: string;
@@ -90,6 +107,10 @@ export const mockCases: TripCase[] = [
       "Founder Office narrows options first; checkout coordination still waits for explicit approval.",
     priority: "urgent",
     state: "reviewing",
+    approvalState: "draft_review",
+    approvalRequestedAt: null,
+    approvalGrantedAt: null,
+    approvalBlockedReason: null,
     owner: "Founder Office queue",
     nextAction: "Draft 2 decision-ready investor-trip options with disclosure notes.",
     optionSetSummary: "Balanced arrival plan vs tighter lower-cost multi-city route",
@@ -120,6 +141,10 @@ export const mockCases: TripCase[] = [
       "EA reviews first, then forwards the selected shortlist for executive approval.",
     priority: "high",
     state: "awaiting_approval",
+    approvalState: "approval_requested",
+    approvalRequestedAt: "2026-06-06 06:42 PT",
+    approvalGrantedAt: null,
+    approvalBlockedReason: null,
     owner: "EA workflow queue",
     nextAction: "Hold coordination until the EA confirms option A or B with the approver.",
     optionSetSummary: "Executive-convenience route vs lower-cost split-city tradeoff",
@@ -150,6 +175,10 @@ export const mockCases: TripCase[] = [
       "Operations aligns on room block and travel window before the final approval checkpoint.",
     priority: "normal",
     state: "new",
+    approvalState: "draft_review",
+    approvalRequestedAt: null,
+    approvalGrantedAt: null,
+    approvalBlockedReason: null,
     owner: "Ops triage",
     nextAction: "Assign operator and normalize the offsite request fields.",
     optionSetSummary: "Pending first pass for group travel options",
@@ -170,6 +199,123 @@ export const stateLabels: Record<CaseState, string> = {
   coordinating: "Coordinating",
   closed: "Closed"
 };
+
+export const approvalStateLabels: Record<ApprovalState, string> = {
+  draft_review: "Draft review",
+  options_prepared: "Options prepared",
+  approval_requested: "Approval requested",
+  approval_blocked: "Approval blocked",
+  approval_granted: "Approval granted",
+  returned_to_review: "Returned to review",
+  ready_for_handoff: "Ready for handoff"
+};
+
+const allowedApprovalTransitions: Record<ApprovalState, ApprovalState[]> = {
+  draft_review: ["options_prepared"],
+  options_prepared: ["approval_requested"],
+  approval_requested: ["approval_granted", "approval_blocked", "returned_to_review"],
+  approval_blocked: [],
+  approval_granted: ["ready_for_handoff"],
+  returned_to_review: ["options_prepared"],
+  ready_for_handoff: []
+};
+
+export function canTransitionApprovalState(from: ApprovalState, to: ApprovalState) {
+  return allowedApprovalTransitions[from].includes(to);
+}
+
+export function getApprovalTransitionGuardReason(from: ApprovalState, to: ApprovalState) {
+  if (from === to) {
+    return "Case is already in that approval state.";
+  }
+
+  if (to === "ready_for_handoff" && from !== "approval_granted") {
+    return "Explicit approval is required before handoff is allowed.";
+  }
+
+  if (!canTransitionApprovalState(from, to)) {
+    return `Transition from ${approvalStateLabels[from]} to ${approvalStateLabels[to]} is not allowed.`;
+  }
+
+  return null;
+}
+
+export function getWorkflowStateFromApprovalState(approvalState: ApprovalState): CaseState {
+  switch (approvalState) {
+    case "draft_review":
+      return "reviewing";
+    case "options_prepared":
+      return "options_sent";
+    case "approval_requested":
+    case "approval_blocked":
+    case "approval_granted":
+      return "awaiting_approval";
+    case "returned_to_review":
+      return "reviewing";
+    case "ready_for_handoff":
+      return "coordinating";
+    default:
+      return "reviewing";
+  }
+}
+
+export function getDefaultNextActionForApprovalState(approvalState: ApprovalState) {
+  switch (approvalState) {
+    case "draft_review":
+      return "Continue internal review before preparing approval-ready options.";
+    case "options_prepared":
+      return "Decision-ready options are prepared; operator can now request approval.";
+    case "approval_requested":
+      return "Approval has been requested; wait for explicit approval, block, or return.";
+    case "approval_blocked":
+      return "Approval is blocked; resolve the blocker before any handoff can continue.";
+    case "approval_granted":
+      return "Explicit approval received; handoff can be unlocked when the operator is ready.";
+    case "returned_to_review":
+      return "Case was returned to review; revise options, evidence, or policy framing.";
+    case "ready_for_handoff":
+      return "Approval is complete; case may move into the guarded coordination handoff.";
+    default:
+      return "Continue case review.";
+  }
+}
+
+export function getAuditActionForApprovalState(approvalState: ApprovalState): AuditEvent["action"] {
+  switch (approvalState) {
+    case "options_prepared":
+      return "options_prepared";
+    case "approval_requested":
+      return "approval_requested";
+    case "approval_blocked":
+      return "approval_blocked";
+    case "approval_granted":
+      return "approval_granted";
+    case "returned_to_review":
+      return "approval_returned";
+    case "ready_for_handoff":
+      return "ready_for_handoff";
+    case "draft_review":
+    default:
+      return "approval_returned";
+  }
+}
+
+export function getApprovalStateFromCaseState(state: CaseState): ApprovalState {
+  switch (state) {
+    case "options_sent":
+      return "options_prepared";
+    case "awaiting_approval":
+      return "approval_requested";
+    case "coordinating":
+      return "ready_for_handoff";
+    case "reviewing":
+      return "draft_review";
+    case "new":
+    case "closed":
+    default:
+      return "draft_review";
+  }
+}
 
 export function getCaseById(id: string) {
   return mockCases.find((item) => item.id === id);
@@ -192,6 +338,9 @@ export function sanitizeCaseForPublicOps(input: TripCase): TripCase {
       "Protected internal approval routing. Public demo view only exposes sanitized intake cases.",
     owner: "Protected ops case",
     nextAction: "Internal operator follow-up continues in the protected workflow surface.",
+    approvalRequestedAt: input.approvalRequestedAt,
+    approvalGrantedAt: input.approvalGrantedAt,
+    approvalBlockedReason: input.approvalBlockedReason,
     optionSetSummary: "Protected intake case; public surface only shows a redacted workflow placeholder.",
     sourceEvidence: "No public evidence is shown for protected intake cases.",
     fetchedAt: "Protected",
@@ -235,6 +384,10 @@ export function buildTripCaseFromIntake(input: TripCaseIntakeInput): TripCase {
       : "Awaiting operator review before any approval checkpoint is defined.",
     priority,
     state: "new",
+    approvalState: "draft_review",
+    approvalRequestedAt: null,
+    approvalGrantedAt: null,
+    approvalBlockedReason: null,
     owner: "Ops triage",
     nextAction: "Review intake and convert it into a decision-ready workflow case.",
     optionSetSummary: "Pending operator first pass",

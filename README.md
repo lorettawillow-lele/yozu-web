@@ -2,6 +2,11 @@
 
 Yozu is an AI Operating System for Enterprise Travel.
 
+> Source-available notice:
+> This repository is not open source.
+> Non-commercial internal evaluation use only.
+> Commercial use or production deployment requires written permission from Yozu.
+
 This repository currently contains the public 4-page launch MVP for Yozu:
 
 - public landing
@@ -137,6 +142,14 @@ yozu-web/
 Current public contact path:
 
 - `contact@yozu.me`
+
+## License
+
+This repository is source-available under the terms in [LICENSE](./LICENSE).
+
+- non-commercial internal evaluation use only
+- commercial use requires written permission from Yozu
+- third-party dependencies remain subject to their own licenses
 
 ## Notes
 
